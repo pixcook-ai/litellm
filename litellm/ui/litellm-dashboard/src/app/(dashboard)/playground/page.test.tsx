@@ -1,7 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "../../../../tests/test-utils";
 import PlaygroundPage from "./page";
 
@@ -47,6 +47,25 @@ const lastUrlUpdate = (onUrlUpdate: ReturnType<typeof vi.fn<OnUrlUpdateFunction>
 
 beforeEach(() => {
   authState.userRole = "Admin";
+});
+
+afterEach(() => vi.restoreAllMocks());
+
+it("selects framework prompts without toggling framework expansion or nesting buttons", async () => {
+  const { default: ComplianceUI } = await vi.importActual<typeof import("./components/complianceUI/ComplianceUI")>(
+    "./components/complianceUI/ComplianceUI",
+  );
+  const consoleError = vi.spyOn(console, "error");
+  const user = userEvent.setup();
+  renderWithProviders(<ComplianceUI accessToken={null} />);
+  expect(consoleError.mock.calls.flat().join(" ")).not.toContain("cannot be a descendant of");
+  const selectFramework = screen.getAllByRole("button", { name: "All", exact: true })[0]!;
+  await user.click(selectFramework);
+  expect(selectFramework).toHaveTextContent("Clear");
+  const framework = screen.getAllByRole("button", { expanded: true })[0]!;
+  expect(framework).toBeInTheDocument();
+  await user.click(framework);
+  expect(framework).toHaveAttribute("aria-expanded", "false");
 });
 
 describe("PlaygroundPage role guard", () => {

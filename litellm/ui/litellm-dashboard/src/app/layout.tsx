@@ -30,8 +30,8 @@ export default function RootLayout({
     // cannot predict; suppressHydrationWarning confines that mismatch to this element.
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <I18nProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <I18nProvider>
             <NuqsAdapter>
               <ReactQueryProvider>
                 <TerminologyProvider>
@@ -42,8 +42,8 @@ export default function RootLayout({
                 <Toaster />
               </ReactQueryProvider>
             </NuqsAdapter>
-          </ThemeProvider>
-        </I18nProvider>
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { BRAND_NAME, BRAND_SLOGAN } from "@/lib/brand";
+import { BRAND_LOGO_PATH, BRAND_NAME, BRAND_SLOGAN } from "@/lib/brand";
+import { uiHref } from "@/utils/uiHref";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -18,7 +19,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: BRAND_NAME,
   description: BRAND_SLOGAN,
-  icons: { icon: "/get_favicon" },
+  icons: { icon: { url: uiHref(BRAND_LOGO_PATH), type: "image/svg+xml" } },
 };
 
 export default function RootLayout({

@@ -5,6 +5,7 @@ import time
 from collections.abc import Awaitable, Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from functools import partial
 from types import MappingProxyType
 from typing import Final, Protocol
 
@@ -1110,6 +1111,9 @@ async def test_unlicensed_priorities_log_the_premium_line_the_same_number_of_tim
     monkeypatch: pytest.MonkeyPatch, isolated: Clock
 ):
     monkeypatch.delenv("LITELLM_LICENSE")
+    monkeypatch.setattr(
+        model_capacity_native, "CapacityHost", partial(model_capacity_native.CapacityHost, enterprise_features=False)
+    )
     monkeypatch.setattr(litellm, "priority_reservation", {"high": 0.7, "low": 0.3})
     router: Final = _router(("lic", 1000, 10))
     steps: Final = [
@@ -1119,6 +1123,15 @@ async def test_unlicensed_priorities_log_the_premium_line_the_same_number_of_tim
     ]
     native: Final = await _differential(monkeypatch, isolated, router, steps, [("priority_model", "lic:high")])
     assert sum(step[-2][1] for step in native[:-2]) > 0, native
+
+
+async def test_branch_edition_applies_priority_reservation_without_a_license(
+    monkeypatch: pytest.MonkeyPatch, isolated: Clock
+):
+    monkeypatch.delenv("LITELLM_LICENSE")
+    monkeypatch.setattr(litellm, "priority_reservation", {"high": 0.7, "low": 0.3})
+    limiter: Final = dynamic_rate_limiter_v3.PROXY_DynamicRateLimitHandlerV3(DualCache(), time_provider=isolated.now)
+    assert limiter.delegate.settings({})["ok"]["licensed"] is True
 
 
 def _socket_connection(name: str, key: UserAPIKeyAuth, turns: Sequence[Turn]) -> Step:

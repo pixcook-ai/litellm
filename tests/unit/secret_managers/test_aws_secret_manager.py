@@ -47,4 +47,15 @@ def test_kms_v2_without_a_license_tells_the_user_to_set_one(monkeypatch: pytest.
         "AWSKeyManagementService V2 is an Enterprise Feature. Please add a valid LITELLM_LICENSE to your environment."
     )
     with pytest.raises(ValueError, match=f"^{re.escape(expected_message)}$"):
-        AWSKeyManagementService_V2()
+        AWSKeyManagementService_V2(enterprise_features=False)
+
+
+def test_branch_edition_uses_kms_without_a_license(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("AWS_REGION_NAME", "us-west-2")
+    monkeypatch.delenv("LITELLM_LICENSE", raising=False)
+    monkeypatch.delenv("LITELLM_SECRET_AWS_KMS_LITELLM_LICENSE", raising=False)
+    kms: Final = AWSKeyManagementService_V2()
+    with Stubber(kms.kms_client) as stubber:
+        stubber.add_response("decrypt", {"KeyId": _KEY_ID, "Plaintext": b"secret"}, {"CiphertextBlob": _CIPHERTEXT})
+        monkeypatch.setenv("ENCRYPTED_SETTING", "aws_kms/" + base64.b64encode(_CIPHERTEXT).decode())
+        assert kms.decrypt_value(secret_name="ENCRYPTED_SETTING") == "secret"

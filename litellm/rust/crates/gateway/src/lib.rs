@@ -1,6 +1,7 @@
 mod admit;
 mod boot;
 mod db;
+mod edition;
 mod error;
 mod health;
 pub mod host;

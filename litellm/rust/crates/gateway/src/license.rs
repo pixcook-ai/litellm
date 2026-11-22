@@ -17,6 +17,9 @@ pub(crate) async fn build_license(
     environment: &Environment,
     resources: &Resources,
 ) -> Entitlements {
+    if crate::edition::ENTERPRISE_FEATURES_ENABLED {
+        return Entitlements::BranchEdition;
+    }
     let timeout = environment
         .non_llm_connection_timeout
         .map_or(DEFAULT_NON_LLM_CONNECTION_TIMEOUT, Duration::from_secs);

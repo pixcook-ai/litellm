@@ -18,6 +18,7 @@ from typing import Final
 from pydantic import TypeAdapter
 
 import litellm
+from litellm.proxy.auth.edition import ENTERPRISE_FEATURES_ENABLED
 from litellm.types.secret_managers.main import KeyManagementSystem
 
 _PARSED_LITERAL: Final = TypeAdapter(object)
@@ -51,7 +52,8 @@ class AWSKeyManagementService_V2:
     V2 Clean Class for decrypting keys from AWS KeyManagementService
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, enterprise_features: bool = ENTERPRISE_FEATURES_ENABLED) -> None:
+        self.enterprise_features = enterprise_features
         self.validate_environment()
         self.kms_client = self.load_aws_kms(use_aws_kms=True)
 
@@ -65,7 +67,8 @@ class AWSKeyManagementService_V2:
         is_litellm_license_in_env: bool = False
 
         if (
-            os.getenv("LITELLM_LICENSE", None) is not None
+            self.enterprise_features
+            or os.getenv("LITELLM_LICENSE", None) is not None
             or os.getenv("LITELLM_SECRET_AWS_KMS_LITELLM_LICENSE", None) is not None
         ):
             is_litellm_license_in_env = True

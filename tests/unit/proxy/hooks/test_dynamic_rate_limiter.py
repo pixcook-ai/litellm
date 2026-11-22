@@ -514,13 +514,16 @@ async def test_update_cache(dynamic_rate_limit_handler, mock_response, user_api_
     "setup_and_teardown",
 )
 @pytest.mark.parametrize("num_projects", [1, 2, 100])
+@pytest.mark.parametrize("has_license", [True, False])
 @pytest.mark.asyncio
-async def test_priority_reservation(num_projects, dynamic_rate_limit_handler):
+async def test_priority_reservation(num_projects, dynamic_rate_limit_handler, monkeypatch, has_license):
     """
     If reservation is set + `mock_testing_reservation` passed in
 
     assert correct rpm is reserved
     """
+    if not has_license:
+        monkeypatch.delenv("LITELLM_LICENSE", raising=False)
     model = "my-fake-model"
     ## SET CACHE W/ ACTIVE PROJECTS
     projects = [str(uuid.uuid4()) for _ in range(num_projects)]

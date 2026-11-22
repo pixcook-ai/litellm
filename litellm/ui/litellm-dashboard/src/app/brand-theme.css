@@ -17,7 +17,7 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --radius: 0.625rem;
+  --radius: 0.5rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -186,7 +186,8 @@
   display: none;
 }
 
-[data-slot="tabs-list"][data-variant="default"]:not([data-orientation="vertical"]) [data-slot="tabs-trigger"][data-active]:not([data-active="false"]) {
+[data-slot="tabs-list"][data-variant="default"]:not([data-orientation="vertical"])
+  [data-slot="tabs-trigger"][data-active]:not([data-active="false"]) {
   background-color: var(--card);
   color: var(--foreground);
   border-color: transparent;
@@ -223,4 +224,23 @@
 
 [data-slot="combobox-chip"] {
   border-radius: var(--radius-4xl);
+}
+
+[data-slot="button"],
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="select-trigger"],
+[data-slot="input-group"],
+[data-slot="combobox-chips"],
+[data-slot="combobox-trigger"],
+[data-slot="sidebar-menu-button"],
+[data-slot="sidebar-menu-sub-button"],
+[data-slot="tabs-list"][data-variant="default"]:not([data-orientation="vertical"]),
+[data-slot="tabs-list"][data-variant="default"]:not([data-orientation="vertical"]) [data-slot="tabs-trigger"],
+.lens-nav-tab {
+  border-radius: var(--radius-xl);
+}
+
+[data-slot="input-group-control"] {
+  border-radius: 0;
 }

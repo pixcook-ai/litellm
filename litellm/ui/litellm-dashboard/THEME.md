@@ -9,3 +9,5 @@ When merging upstream, keep the theme import after the upstream declarations, re
 Validate light and dark access groups, the creation dialog, home cards and Lens. Run targeted Button, Select and Badge tests, ESLint on changed primitives and the dashboard typecheck. Live trace data, every dashboard route and narrow viewports have not been fully verified.
 
 Shared surfaces use stable `data-slot` selectors in the theme layer. These cover the workspace background, table frames, dialogs, menus, tabs, sidebar navigation and Lens panels. Page tabs use the shared segmented variant. Keep functional size, scrolling and positioning classes in their components. Treat new page-specific surfaces as integration work rather than overriding every rounded element globally.
+
+The fork uses an 8px base radius. Controls and navigation use the smaller shared XL radius, while cards and overlays retain the larger surface scale. Circular avatars and switches keep their functional shapes.

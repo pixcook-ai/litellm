@@ -48,6 +48,8 @@ def _snapshot(
         "atext_completion",
         "responses",
         "aresponses",
+        "anthropic_messages",
+        "aanthropic_messages",
     ),
 )
 def test_text_provider_usage_keeps_distinct_cache_quantities(call_type: str) -> None:
@@ -91,8 +93,6 @@ def test_missing_invalid_and_zero_usage_cannot_generate_payable_usage(usage: Map
         ("success", True, "acompletion"),
         ("success", False, "aimage_generation"),
         ("success", False, "aembedding"),
-        ("success", False, "anthropic_messages"),
-        ("success", False, "aanthropic_messages"),
     ),
 )
 def test_failed_cached_and_non_token_billing_calls_do_not_generate_earnings(

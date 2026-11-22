@@ -19,6 +19,8 @@ _TOKEN_CALLS: Final = frozenset(
         CallTypes.atext_completion.value,
         CallTypes.responses.value,
         CallTypes.aresponses.value,
+        CallTypes.anthropic_messages.value,
+        CallTypes.aanthropic_messages.value,
     )
 )
 TokenCount: TypeAlias = Annotated[int, Field(ge=0, le=9223372036854775807, strict=True)]

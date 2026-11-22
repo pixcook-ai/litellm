@@ -1409,11 +1409,7 @@ class ResponseAPILoggingUtils:
         provider cost calculators can read them after normalization.
         """
         if usage_input is None:
-            return Usage(
-                prompt_tokens=0,
-                completion_tokens=0,
-                total_tokens=0,
-            )
+            return Usage()
         if isinstance(usage_input, Usage):
             return usage_input
         if isinstance(usage_input, dict) and not ResponseAPILoggingUtils.is_response_api_usage(usage_input):
@@ -1488,6 +1484,8 @@ class ResponseAPILoggingUtils:
             completion_tokens_details=completion_tokens_details,
             **extra_usage_fields,
         )
+        if not frozenset(("input_tokens", "output_tokens")).issubset(response_api_usage.model_fields_set):
+            chat_usage.mark_estimated_tokens()
 
         # Preserve cost attribute if it exists on ResponseAPIUsage
         if hasattr(response_api_usage, "cost") and response_api_usage.cost is not None:

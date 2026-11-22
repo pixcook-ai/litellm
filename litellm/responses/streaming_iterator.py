@@ -1822,7 +1822,7 @@ def _logging_copy(event: object) -> object:
     if not isinstance(event, BaseModel):
         return event
     try:
-        return type(event).model_validate(event.model_dump())
+        return type(event).model_validate(event.model_dump(exclude_unset=True))
     except Exception:
         return _detached_shallow_copy(event)
 
@@ -1910,12 +1910,12 @@ def _estimate_usage_safely(
             generated_text=generated_text,
             use_default_image_token_count=use_default_image_token_count,
         )
-        if logging_obj is not None:
-            logging_obj.mark_estimated_usage()
-        return estimated
     except Exception as e:
         verbose_logger.debug("Could not estimate usage from stream text, billing $0: %s", e)
         return None
+    if logging_obj is not None:
+        logging_obj.mark_estimated_usage()
+    return estimated
 
 
 def stamp_responses_usage_cost(

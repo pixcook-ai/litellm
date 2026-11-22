@@ -1037,3 +1037,24 @@ def test_responses_object_bills_an_explicit_cache_hit_at_the_explicit_rate():
         else:
             litellm.model_cost[model] = previous_row
         publish(litellm.model_cost)
+
+
+@pytest.mark.parametrize("reported", (False, True))
+def test_chat_conversion_preserves_raw_responses_token_provenance(reported: bool) -> None:
+    from typing import Final
+
+    from litellm.litellm_core_utils.supplier_usage import supplier_usage_was_reported
+    from litellm.responses.utils import ResponseAPILoggingUtils
+    from litellm.types.llms.openai import ResponseAPIUsage
+    from litellm.types.utils import ModelResponse
+
+    raw: Final = (
+        ResponseAPIUsage(input_tokens=7, output_tokens=0, total_tokens=7)
+        if reported
+        else ResponseAPIUsage.model_construct(
+            input_tokens=7, output_tokens=0, total_tokens=7, _fields_set={"input_tokens", "total_tokens"}
+        )
+    )
+    converted: Final = ResponseAPILoggingUtils.transform_response_api_usage_to_chat_usage(raw)
+    assert (converted.prompt_tokens, converted.completion_tokens) == (7, 0)
+    assert supplier_usage_was_reported(ModelResponse(usage=converted)) is reported

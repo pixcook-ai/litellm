@@ -6264,7 +6264,11 @@ class Logging(LiteLLMLoggingBaseClass):
         ):
             ## return unified Usage object
             if isinstance(result.response.usage, ResponseAPIUsage):
-                set_hidden_param(result.response, "_supplier_usage_reported", True)
+                set_hidden_param(
+                    result.response,
+                    "_supplier_usage_reported",
+                    frozenset(("input_tokens", "output_tokens")).issubset(result.response.usage.model_fields_set),
+                )
                 set_response_cost_in_hidden_params(
                     result.response,
                     provider_reported_usage_cost(
@@ -9006,6 +9010,13 @@ def get_standard_logging_object_payload(
         )
         payload_details: Final = _METADATA_MAPPING.validate_python(kwargs)
         subscription_details: Final = {**logging_obj.model_call_details, **payload_details}
+        messages_usage_reported: Final = call_type not in (
+            CallTypes.anthropic_messages.value,
+            CallTypes.aanthropic_messages.value,
+        ) or (
+            isinstance(init_response_obj, ModelResponse)
+            and (logging_obj.stream is True or supplier_usage_was_reported(logging_obj.bridged_model_response))
+        )
         clean_metadata: Final[StandardLoggingMetadata] = {
             **base_metadata,
             "claude_subscription_usage": claude_subscription_usage(subscription_details, init_response_obj),
@@ -9028,6 +9039,7 @@ def get_standard_logging_object_payload(
                 custom_llm_provider=selected_provider if isinstance(selected_provider, str) else "",
                 usage_reported=(
                     supplier_usage_was_reported(init_response_obj)
+                    and messages_usage_reported
                     and logging_obj.model_call_details.get("_supplier_usage_estimated") is not True
                 ),
             ),

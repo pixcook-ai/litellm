@@ -5811,12 +5811,22 @@ def test_supplier_usage_cannot_be_forged_on_cached_or_failed_calls(
         (Usage(prompt_tokens=100, completion_tokens=0), True),
     ),
 )
+@pytest.mark.parametrize("call_type", ("acompletion", "anthropic_messages", "aanthropic_messages"))
 def test_supplier_stream_requires_both_reported_counts_without_changing_customer_usage(
-    logging_obj: Logging, reported_usage: Usage | None, payable: bool
+    call_type: str, reported_usage: Usage | None, payable: bool
 ) -> None:
     from litellm.types.utils import Delta, ModelResponseStream, StreamingChoices
 
     started: Final = datetime_unit_test(2026, 1, 1, tzinfo=datetime.timezone.utc)
+    logging_obj: Final = Logging(
+        model="supplier-provenance-test",
+        messages=[],
+        stream=True,
+        call_type=call_type,
+        start_time=0.0,
+        litellm_call_id="supplier-stream",
+        function_id="test",
+    )
     chunks: Final = [
         ModelResponseStream(
             id="supplier-stream",
@@ -5830,7 +5840,7 @@ def test_supplier_stream_requires_both_reported_counts_without_changing_customer
     assert response is not None
     payload: Final = get_standard_logging_object_payload(
         kwargs={
-            "call_type": "acompletion",
+            "call_type": call_type,
             "stream": True,
             "litellm_params": {"metadata": {"model_info": {"id": "deployment-a"}}},
             "custom_llm_provider": "openai",
@@ -5848,8 +5858,67 @@ def test_supplier_stream_requires_both_reported_counts_without_changing_customer
     assert (payload["metadata"].get("supplier_usage") is not None) is payable
 
 
+@pytest.mark.parametrize(
+    ("usage", "bridged", "provider", "payable"),
+    (
+        (Usage(prompt_tokens=100, completion_tokens=8), True, "openai", True),
+        (Usage(prompt_tokens=100), True, "openai", False),
+        (None, True, "openai", False),
+        (Usage(prompt_tokens=100, completion_tokens=8), False, "openai", False),
+        (Usage(prompt_tokens=100, completion_tokens=8), True, "anthropic", False),
+    ),
+)
+def test_supplier_messages_uses_reported_bridge_usage_instead_of_served_body(
+    usage: Usage | None, bridged: bool, provider: str, payable: bool
+) -> None:
+    started: Final = datetime_unit_test(2026, 1, 1, tzinfo=datetime.timezone.utc)
+    logger: Final = Logging(
+        model="supplier-provenance-test",
+        messages=[],
+        stream=False,
+        call_type="anthropic_messages",
+        start_time=0.0,
+        litellm_call_id="supplier-bridged-message",
+        function_id="test",
+    )
+    logger.update_environment_variables(litellm_params={}, optional_params={})
+    if bridged:
+        logger.record_bridged_model_response(ModelResponse(id="upstream-response", created=1, usage=usage))
+    served: Final = {
+        "id": "served-message",
+        "type": "message",
+        "role": "assistant",
+        "model": "supplier-provenance-test",
+        "content": [{"type": "text", "text": "reply"}],
+        "stop_reason": "end_turn",
+        "usage": {"input_tokens": 50, "output_tokens": 8},
+    }
+    result: Final = logger.normalize_endpoint_logging_result(served)
+    payload: Final = get_standard_logging_object_payload(
+        kwargs={
+            "call_type": "anthropic_messages",
+            "custom_llm_provider": provider,
+            "litellm_params": {"metadata": {"model_info": {"id": "deployment-a"}}},
+        },
+        init_response_obj=result,
+        start_time=started,
+        end_time=started,
+        logging_obj=logger,
+        status="success",
+    )
+    assert payload is not None
+    snapshot: Final = payload["metadata"].get("supplier_usage")
+    assert (snapshot is not None) is payable
+    if snapshot is not None:
+        assert (snapshot["prompt_tokens"], snapshot["completion_tokens"]) == (100, 8)
+        assert (payload["prompt_tokens"], payload["completion_tokens"]) == (100, 8)
+
+
 @pytest.mark.parametrize("reported", (False, True))
-def test_supplier_native_responses_logging_copy_preserves_usage_provenance_and_client_json(reported: bool) -> None:
+@pytest.mark.parametrize("complete", (False, True))
+def test_supplier_native_responses_logging_copy_preserves_usage_provenance_and_client_json(
+    reported: bool, complete: bool
+) -> None:
     from litellm.responses.streaming_iterator import _estimate_usage_safely, _logging_copy
     from litellm.types.llms.openai import ResponseAPIUsage, ResponseCompletedEvent, ResponsesAPIResponse
 
@@ -5864,7 +5933,16 @@ def test_supplier_native_responses_logging_copy_preserves_usage_provenance_and_c
         function_id="test",
     )
     usage: Final = (
-        ResponseAPIUsage(input_tokens=100, output_tokens=8, total_tokens=108)
+        (
+            ResponseAPIUsage(input_tokens=100, output_tokens=8, total_tokens=108)
+            if complete
+            else ResponseAPIUsage.model_construct(
+                input_tokens=100,
+                output_tokens=0,
+                total_tokens=100,
+                _fields_set={"input_tokens", "total_tokens"},
+            )
+        )
         if reported
         else _estimate_usage_safely(
             "supplier-provenance-test",
@@ -5908,7 +5986,7 @@ def test_supplier_native_responses_logging_copy_preserves_usage_provenance_and_c
     assert payload is not None
     assert payload["prompt_tokens"] == usage.input_tokens
     assert payload["completion_tokens"] == usage.output_tokens
-    assert (payload["metadata"].get("supplier_usage") is not None) is reported
+    assert (payload["metadata"].get("supplier_usage") is not None) is (reported and complete)
     assert event.model_dump_json() == client_json
 
 

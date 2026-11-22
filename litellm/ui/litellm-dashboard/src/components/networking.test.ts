@@ -1286,3 +1286,50 @@ describe("modelPatchUpdateCall", () => {
     );
   });
 });
+
+describe("getConfigFieldSetting - optional settings", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("uses the supplied default only when the requested field is unset", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ detail: { error: "Field name=enable_public_model_hub is not set" } }), {
+            status: 400,
+          }),
+        ),
+    );
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await expect(
+      Networking.getConfigFieldSetting("token", "enable_public_model_hub", { defaultValue: false }),
+    ).resolves.toEqual({ field_name: "enable_public_model_hub", field_value: false });
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it.each([401, 500])("rejects HTTP %s even when a default is supplied", async (status) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: { error: "Request failed" } }), { status })),
+    );
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await expect(
+      Networking.getConfigFieldSetting("token", "enable_public_model_hub", { defaultValue: false }),
+    ).rejects.toThrow("Request failed");
+  });
+
+  it("returns an explicitly enabled setting instead of the default", async () => {
+    const configured = { field_name: "enable_public_model_hub", field_value: true };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(configured))));
+
+    await expect(
+      Networking.getConfigFieldSetting("token", "enable_public_model_hub", { defaultValue: false }),
+    ).resolves.toEqual(configured);
+  });
+});

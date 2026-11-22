@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { getProxyBaseUrl } from "@/components/networking";
 import { z } from "zod";
+import { BRAND_LOGO_PATH } from "@/lib/brand";
+import { uiHref } from "@/utils/uiHref";
 
 interface ThemeContextType {
   logoUrl: string | null;
@@ -28,7 +30,7 @@ export function resolveThemeImages(
   const settings = themeImagesSchema.parse(data);
   const imageUrl = `${proxyBaseUrl ?? ""}/get_image`;
   return {
-    logoUrl: settings.logo_url_via_proxy ? imageUrl : settings.values.logo_url || null,
+    logoUrl: settings.logo_url_via_proxy ? imageUrl : settings.values.logo_url || uiHref(BRAND_LOGO_PATH),
     logoUrlDark: settings.logo_url_dark_via_proxy ? `${imageUrl}?theme=dark` : settings.values.logo_url_dark || null,
     faviconUrl: settings.values.favicon_url || null,
   };
@@ -50,7 +52,7 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, accessToken }) => {
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(uiHref(BRAND_LOGO_PATH));
   const [logoUrlDark, setLogoUrlDark] = useState<string | null>(null);
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
 

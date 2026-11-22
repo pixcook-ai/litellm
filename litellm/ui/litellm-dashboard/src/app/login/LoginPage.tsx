@@ -31,6 +31,7 @@ import { z } from "zod";
 import { useWorker } from "@/hooks/useWorker";
 import i18n from "@/i18n/i18n";
 import { uiHref } from "@/utils/uiHref";
+import { BRAND_LOGO_PATH } from "@/lib/brand";
 import { productNames } from "@/i18n/untranslated/productNames";
 
 const loginSchema = z.object({
@@ -44,12 +45,12 @@ function LoginLogo() {
   return (
     <div className="flex justify-center">
       <img
-        src={uiHref("assets/logos/litellm_logo.png")}
+        src={uiHref(BRAND_LOGO_PATH)}
         alt={productNames.liteLLM}
         className="h-10 w-auto dark:hidden"
       />
       <img
-        src={uiHref("assets/logos/litellm_logo_dark.png")}
+        src={uiHref(BRAND_LOGO_PATH)}
         alt={productNames.liteLLM}
         className="hidden h-10 w-auto dark:block"
       />

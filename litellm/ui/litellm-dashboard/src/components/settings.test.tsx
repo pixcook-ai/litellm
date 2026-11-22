@@ -497,6 +497,31 @@ describe("Settings", () => {
     expect(payload.environment_variables).not.toHaveProperty("S3_PARTITION_GRANULARITY");
   });
 
+  it("keeps alert switches usable when the backend omits optional alert settings", async () => {
+    mockGetCallbacksCall.mockResolvedValue({
+      callbacks: [],
+      available_callbacks: [],
+      alerts: [{ variables: {} }],
+    });
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const user = userEvent.setup();
+    renderWithProviders(<Settings {...defaultProps} />, { searchParams: { tab: "alerting-types" } });
+
+    await screen.findByText("No callbacks configured");
+    const switches = screen.getAllByRole("switch");
+    expect(switches[0]).not.toBeChecked();
+    await user.click(switches[0]);
+    expect(switches[0]).toBeChecked();
+    await user.click(screen.getByRole("button", { name: "Save Changes" }));
+    await waitFor(() =>
+      expect(vi.mocked(setCallbacksCall)).toHaveBeenCalledWith("token", {
+        general_settings: expect.objectContaining({ alert_types: ["llm_exceptions"] }),
+      }),
+    );
+    expect(consoleError.mock.calls.flat().join(" ")).not.toMatch(/controlled.*uncontrolled|uncontrolled.*controlled/i);
+    consoleError.mockRestore();
+  });
+
   it("should send the typed webhook url for an alert type when the alerting tab is saved", async () => {
     const user = userEvent.setup();
     renderWithProviders(<Settings {...defaultProps} />);

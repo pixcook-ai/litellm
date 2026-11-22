@@ -1855,9 +1855,6 @@
     },
     "no-nested-ternary": {
       "count": 2
-    },
-    "prefer-const": {
-      "count": 4
     }
   },
   "src/components/shared/advanced_date_picker.tsx": {

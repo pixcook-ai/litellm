@@ -13,3 +13,5 @@ Shared surfaces use stable `data-slot` selectors in the theme layer. These cover
 The fork uses an 8px base radius. Controls and navigation use the smaller shared XL radius, while cards and overlays retain the larger surface scale. Circular avatars and switches keep their functional shapes.
 
 The Lime theme follows the official `b1VoQUK0` color preset. Local radius and categorical chart overrides remain in place.
+
+Container drop shadows are disabled in the theme layer, including cards, tables and floating surfaces. Component border rings and keyboard focus indicators remain intact.

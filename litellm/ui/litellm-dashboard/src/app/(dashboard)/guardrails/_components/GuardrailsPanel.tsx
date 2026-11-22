@@ -100,7 +100,7 @@ const GuardrailsPanel: React.FC<GuardrailsPanelProps> = ({ accessToken, userRole
   };
 
   return (
-    <div className="w-full mx-auto flex-auto overflow-y-auto m-8 p-2">
+    <div data-page-layout="" className="w-full mx-auto flex-auto overflow-y-auto m-8 p-2">
       <Tabs defaultValue="guardrails">
         <TabsList variant="line">
           {isAdmin && (

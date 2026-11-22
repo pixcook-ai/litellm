@@ -176,7 +176,7 @@ export const MemoryView: React.FC<MemoryViewProps> = ({ accessToken }) => {
   };
 
   return (
-    <div className="w-full p-6">
+    <div data-page-layout="" className="w-full p-6">
       <div className="flex flex-col gap-6">
         <div className="flex items-start justify-between gap-4">
           <div>

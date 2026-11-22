@@ -99,7 +99,7 @@ const OrganizationsPanel: React.FC<OrganizationsPanelProps> = ({ userRole, acces
 
   if (!premiumUser) {
     return (
-      <div className="mx-4 mt-4">
+      <div data-page-layout="" className="mx-4 mt-4">
         <p className="text-sm text-muted-foreground">
           <Trans
             i18nKey="organizations.panel.enterpriseNotice"
@@ -120,7 +120,7 @@ const OrganizationsPanel: React.FC<OrganizationsPanelProps> = ({ userRole, acces
   }
 
   return (
-    <div className="mx-4 mt-4 flex flex-col gap-4">
+    <div data-page-layout="" className="mx-4 mt-4 flex flex-col gap-4">
       {(userRole === "Admin" || userRole === "Org Admin") && (
         <Button className="w-fit" onClick={() => setIsOrgModalVisible(true)}>
           {t("organizations.panel.createButton")}

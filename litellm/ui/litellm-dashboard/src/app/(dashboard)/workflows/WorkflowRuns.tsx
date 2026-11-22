@@ -518,7 +518,7 @@ const WorkflowRuns: React.FC<WorkflowRunsProps> = ({ accessToken }) => {
   const statusLabels = Object.fromEntries(RUN_STATUS_OPTIONS.map((status) => [status, t(STATUS_LABEL_KEYS[status])]));
 
   return (
-    <div className="w-full px-8 py-6">
+    <div data-page-layout="" className="w-full px-8 py-6">
       {/* page header */}
       <div className="mb-5">
         <div className="text-lg font-semibold text-foreground">{t("workflows.header.title")}</div>

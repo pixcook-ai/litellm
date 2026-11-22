@@ -297,7 +297,7 @@ const SearchTools: React.FC<SearchToolsProps> = ({ accessToken, userRole, userID
     );
 
   return (
-    <div className="w-full h-full p-6">
+    <div data-page-layout="" className="w-full h-full p-6">
       <DeleteResourceModal
         isOpen={isDeleteModalOpen}
         title={t("searchTools.page.deleteModal.title")}

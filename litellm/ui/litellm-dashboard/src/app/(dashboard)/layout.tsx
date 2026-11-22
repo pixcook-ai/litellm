@@ -195,6 +195,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             <DeploymentHealthPanel handle={deploymentHealthHandle} />
             <UserBanner accessToken={accessToken} />
             <div
+              data-slot="dashboard-content"
+              data-layout={routeSegment === "aria" || routeSegment === "lens" ? "workspace" : "page"}
               className={
                 routeSegment === "aria"
                   ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"

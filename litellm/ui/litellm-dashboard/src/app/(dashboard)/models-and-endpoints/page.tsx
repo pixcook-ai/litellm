@@ -189,8 +189,8 @@ export default function ModelsAndEndpointsPage() {
   }
 
   return (
-    <div className="mx-4">
-      <div className="mt-2 flex w-full flex-col gap-2 p-8">
+    <div data-page-layout="" className="mx-4">
+      <div data-page-layout="" className="mt-2 flex w-full flex-col gap-2 p-8">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold">{t("modelsAndEndpoints.page.title")}</h2>

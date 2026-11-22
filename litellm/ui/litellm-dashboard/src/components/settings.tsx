@@ -610,8 +610,8 @@ const Settings: React.FC<SettingsPageProps> = ({ accessToken, userRole, userID, 
   }
 
   return (
-    <div className="mx-4">
-      <div className="grid grid-cols-1 gap-2 p-8 w-full mt-2">
+    <div data-page-layout="" className="mx-4">
+      <div data-page-layout="" className="grid grid-cols-1 gap-2 p-8 w-full mt-2">
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as SettingsTab)}>
           <TabsList variant="line">
             <TabsTrigger value="logging-callbacks">{t("loggingAndAlerts.page.tabs.loggingCallbacks")}</TabsTrigger>

@@ -1,6 +1,6 @@
 # Dashboard theme
 
-This fork uses the shadcn Maia preset `base-maia` with a Neutral base, Lime theme, Inter, Lucide and pointer cursors. `src/app/brand-theme.css` contains the local light and dark token overrides and neutral Trace surfaces. `globals.css` imports it after the upstream rules. Existing status, chart and trace event colors remain available.
+This fork uses the shadcn Maia preset `base-maia` with a Neutral base, Green theme, Inter, Lucide and pointer cursors. `src/app/brand-theme.css` contains the local light and dark token overrides and neutral Trace surfaces. `globals.css` imports it after the upstream rules. Existing status, chart and trace event colors remain available.
 
 The local Button, Card, Input, Textarea, SelectTrigger and InputGroup use Maia appearance classes. Their existing props, refs and behavior remain intact. Card overflow remains visible to preserve existing content and overlays. Textareas remain resizable. Lens uses the shared theme tokens while retaining its packaged components.
 
@@ -12,7 +12,7 @@ Shared surfaces use stable `data-slot` selectors in the theme layer. These cover
 
 The fork uses an 8px base radius. Controls and navigation use the smaller shared XL radius, while cards and overlays retain the larger surface scale. Circular avatars and switches keep their functional shapes.
 
-The Lime theme follows the official `b1VoQUK0` color preset. Local radius and categorical chart overrides remain in place.
+The Green theme follows the official `b1VnrI3s` color preset. Local radius and categorical chart overrides remain in place.
 
 Container drop shadows are disabled in the theme layer, including cards, tables and floating surfaces. Component border rings and keyboard focus indicators remain intact.
 

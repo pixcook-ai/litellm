@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BRAND_NAME, BRAND_SLOGAN } from "@/lib/brand";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -15,8 +16,8 @@ import I18nProvider from "@/i18n/I18nProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "LiteLLM Dashboard",
-  description: "LiteLLM Proxy Admin UI",
+  title: BRAND_NAME,
+  description: BRAND_SLOGAN,
   icons: { icon: "/get_favicon" },
 };
 

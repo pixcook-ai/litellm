@@ -17864,6 +17864,230 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/supplier/admin/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Adjust Ledger
+         * @description Append an explained signed adjustment. Full proxy administrators only.
+         */
+        post: operations["adjust_ledger_supplier_admin_adjustments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/supplier/admin/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Applications
+         * @description List supplier applications. Proxy administrators and admin viewers only.
+         */
+        get: operations["admin_applications_supplier_admin_applications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/supplier/admin/applications/{supplier_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Review Application
+         * @description Approve or reject a pending application. Full proxy administrators only.
+         */
+        post: operations["review_application_supplier_admin_applications__supplier_id__review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/supplier/admin/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Ledger
+         * @description List a supplier's ledger. Proxy administrators and admin viewers only.
+         */
+        get: operations["admin_ledger_supplier_admin_ledger_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/supplier/admin/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish Rate
+         * @description Publish an immutable wholesale quote for an existing deployment. Full proxy administrators only.
+         */
+        post: operations["publish_rate_supplier_admin_rates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/supplier/admin/settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Settlements
+         * @description List a supplier's settlements. Proxy administrators and admin viewers only.
+         */
+        get: operations["admin_settlements_supplier_admin_settlements_get"];
+        put?: never;
+        /**
+         * Record Settlement
+         * @description Record a manual payment for explicit unpaid ledger entries. Full proxy administrators only.
+         */
+        post: operations["record_settlement_supplier_admin_settlements_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/supplier/admin/suppliers/{supplier_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Supplier
+         * @description Read one supplier's application and earnings. Proxy administrators and admin viewers only.
+         */
+        get: operations["admin_supplier_supplier_admin_suppliers__supplier_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/supplier/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Application
+         * @description Submit or resubmit the authenticated user's supplier application.
+         */
+        post: operations["submit_application_supplier_applications_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/supplier/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Supplier Ledger
+         * @description List only the authenticated supplier's ledger entries.
+         */
+        get: operations["supplier_ledger_supplier_ledger_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/supplier/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Supplier Me
+         * @description Read the authenticated supplier's application and earnings, or null before applying.
+         */
+        get: operations["supplier_me_supplier_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/supplier/settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Supplier Settlements
+         * @description List only the authenticated supplier's manual settlement records.
+         */
+        get: operations["supplier_settlements_supplier_settlements_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/systemone": {
         parameters: {
             query?: never;
@@ -27614,6 +27838,20 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** AdjustmentInput */
+        AdjustmentInput: {
+            /** Amount */
+            amount: number | string;
+            /**
+             * Idempotency Key
+             * Format: uuid
+             */
+            idempotency_key: string;
+            /** Reason */
+            reason: string;
+            /** Supplier Id */
+            supplier_id: string;
+        };
         /** AdminIgnore */
         AdminIgnore: {
             /**
@@ -28743,6 +28981,76 @@ export interface components {
          * @enum {string}
          */
         AppResourceType: "team" | "project" | "virtual_key";
+        /** Application */
+        Application: {
+            /** Capacity */
+            capacity: string;
+            /** Contact Email */
+            contact_email: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Name */
+            display_name: string;
+            /** Endpoint Url */
+            endpoint_url: string;
+            /** Id */
+            id: string;
+            /** Models */
+            models: string;
+            /** Owner User Id */
+            owner_user_id: string;
+            /** Review Note */
+            review_note: string | null;
+            /** Revision */
+            revision: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "approved" | "rejected";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Website */
+            website: string;
+        };
+        /** ApplicationInput */
+        ApplicationInput: {
+            /** Capacity */
+            capacity: string;
+            /** Contact Email */
+            contact_email: string;
+            /** Display Name */
+            display_name: string;
+            /**
+             * Endpoint Url
+             * Format: uri
+             */
+            endpoint_url: string;
+            /** Models */
+            models: string;
+            /**
+             * Website
+             * Format: uri
+             */
+            website: string;
+        };
+        /** ApplicationPage */
+        ApplicationPage: {
+            /** Items */
+            items: components["schemas"]["Application"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** ApplyGuardrailRequest */
         ApplyGuardrailRequest: {
             /** Entities */
@@ -37345,6 +37653,60 @@ export interface components {
             release_url: string;
             /** Version */
             version: string;
+        };
+        /** LedgerEntry */
+        LedgerEntry: {
+            /** Amount */
+            amount: string;
+            /** Cache Read Tokens */
+            cache_read_tokens: number;
+            /** Cache Write Tokens */
+            cache_write_tokens: number;
+            /** Completion Tokens */
+            completion_tokens: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "usage" | "adjustment";
+            /** Model Id */
+            model_id: string | null;
+            /** Prompt Tokens */
+            prompt_tokens: number;
+            /** Rate Id */
+            rate_id: string | null;
+            /** Reason */
+            reason: string | null;
+            /** Request Id */
+            request_id: string | null;
+            /** Settlement Id */
+            settlement_id: string | null;
+            /** Supplier Id */
+            supplier_id: string;
+        };
+        /** LedgerPage */
+        LedgerPage: {
+            /** Items */
+            items: components["schemas"]["LedgerEntry"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
         };
         /** ListAccessGroupsResponse */
         ListAccessGroupsResponse: {
@@ -46097,6 +46459,49 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** Rate */
+        Rate: {
+            /** Cache Read Per Million */
+            cache_read_per_million: string;
+            /** Cache Write Per Million */
+            cache_write_per_million: string;
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+            /**
+             * Effective At
+             * Format: date-time
+             */
+            effective_at: string;
+            /** Id */
+            id: string;
+            /** Input Per Million */
+            input_per_million: string;
+            /** Model Id */
+            model_id: string;
+            /** Output Per Million */
+            output_per_million: string;
+            /** Supplier Id */
+            supplier_id: string;
+        };
+        /** RateInput */
+        RateInput: {
+            /** Cache Read Per Million */
+            cache_read_per_million: number | string;
+            /** Cache Write Per Million */
+            cache_write_per_million: number | string;
+            /** Input Per Million */
+            input_per_million: number | string;
+            /** Model Id */
+            model_id: string;
+            /** Output Per Million */
+            output_per_million: number | string;
+            /** Supplier Id */
+            supplier_id: string;
+        };
         /** RawRequestTypedDict */
         RawRequestTypedDict: {
             /** Error */
@@ -48566,6 +48971,21 @@ export interface components {
             /** Timeouterrorretries */
             TimeoutErrorRetries?: number | null;
         };
+        /** ReviewInput */
+        ReviewInput: {
+            /** Expected Revision */
+            expected_revision: number;
+            /**
+             * Review Note
+             * @default
+             */
+            review_note: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "approved" | "rejected";
+        };
         /**
          * RoleMappings
          * @description Configuration for mapping SSO groups to LiteLLM roles.
@@ -49387,6 +49807,55 @@ export interface components {
         SessionLogoutResponse: {
             /** Message */
             message: string;
+        };
+        /** Settlement */
+        Settlement: {
+            /** Amount */
+            amount: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+            /** Id */
+            id: string;
+            /** Ledger Ids */
+            ledger_ids: string[];
+            /** Reference */
+            reference: string;
+            /** Supplier Id */
+            supplier_id: string;
+        };
+        /** SettlementInput */
+        SettlementInput: {
+            /**
+             * Idempotency Key
+             * Format: uuid
+             */
+            idempotency_key: string;
+            /** Ledger Ids */
+            ledger_ids: string[];
+            /** Reference */
+            reference: string;
+            /** Supplier Id */
+            supplier_id: string;
+        };
+        /** SettlementPage */
+        SettlementPage: {
+            /** Items */
+            items: components["schemas"]["Settlement"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
         };
         /**
          * ShadowEvalGradePair
@@ -51131,6 +51600,24 @@ export interface components {
             type: "summary_text";
         } & {
             [key: string]: unknown;
+        };
+        /** SupplierOverview */
+        SupplierOverview: {
+            application: components["schemas"]["Application"];
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+            /** Rates */
+            rates: components["schemas"]["Rate"][];
+            /** Settled Amount */
+            settled_amount: string;
+            /** Total Earnings */
+            total_earnings: string;
+            /** Unsettled Amount */
+            unsettled_amount: string;
         };
         /**
          * SupportedDBObjectType
@@ -82108,6 +82595,389 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SubscriptionUsageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    adjust_ledger_supplier_admin_adjustments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustmentInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerEntry"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_applications_supplier_admin_applications_get: {
+        parameters: {
+            query?: {
+                status?: ("pending" | "approved" | "rejected") | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_application_supplier_admin_applications__supplier_id__review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                supplier_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Application"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_ledger_supplier_admin_ledger_get: {
+        parameters: {
+            query: {
+                supplier_id: string;
+                limit?: number;
+                offset?: number;
+                unsettled_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_rate_supplier_admin_rates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RateInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Rate"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_settlements_supplier_admin_settlements_get: {
+        parameters: {
+            query: {
+                supplier_id: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettlementPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_settlement_supplier_admin_settlements_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Settlement"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_supplier_supplier_admin_suppliers__supplier_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                supplier_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierOverview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_application_supplier_applications_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Application"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    supplier_ledger_supplier_ledger_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                unsettled_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    supplier_me_supplier_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierOverview"] | null;
+                };
+            };
+        };
+    };
+    supplier_settlements_supplier_settlements_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettlementPage"];
                 };
             };
             /** @description Validation Error */

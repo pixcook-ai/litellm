@@ -255,6 +255,7 @@ const menuGroups: MenuGroup[] = [
     groupLabel: "AI GATEWAY",
     items: [
       { key: "home", page: "home", label: "shell.nav.items.home", icon: <House {...ICON} /> },
+      { key: "suppliers", page: "suppliers", label: "shell.nav.items.suppliers", icon: <Wallet {...ICON} /> },
       { key: "api-keys", page: "api-keys", label: "shell.nav.items.virtualKeys", icon: <KeyRound {...ICON} /> },
       {
         key: "llm-playground",

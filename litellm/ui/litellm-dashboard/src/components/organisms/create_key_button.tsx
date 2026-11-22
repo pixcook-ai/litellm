@@ -1083,7 +1083,7 @@ const CreateKey: React.FC<CreateKeyProps> = ({ team, teams, data, addKey, autoOp
                     {(control) => (
                       <Select
                         items={keyTypeOptions}
-                        value={control.value as string | undefined}
+                        value={(control.value as string | undefined) ?? null}
                         onValueChange={(value: string | null) =>
                           value != null && changeKeyType(control.onChange)(value)
                         }
@@ -1147,7 +1147,7 @@ const CreateKey: React.FC<CreateKeyProps> = ({ team, teams, data, addKey, autoOp
                         {(control) => (
                           <NumericalInput
                             {...control}
-                            value={control.value as number | string | undefined}
+                            value={(control.value as number | string | undefined) ?? ""}
                             step={0.01}
                             precision={2}
                             width={200}
@@ -1290,7 +1290,7 @@ const CreateKey: React.FC<CreateKeyProps> = ({ team, teams, data, addKey, autoOp
                         {(control) => (
                           <NumericalInput
                             {...control}
-                            value={control.value as number | string | undefined}
+                            value={(control.value as number | string | undefined) ?? ""}
                             step={1}
                             width={400}
                           />
@@ -1333,7 +1333,7 @@ const CreateKey: React.FC<CreateKeyProps> = ({ team, teams, data, addKey, autoOp
                         {(control) => (
                           <NumericalInput
                             {...control}
-                            value={control.value as number | string | undefined}
+                            value={(control.value as number | string | undefined) ?? ""}
                             step={1}
                             width={400}
                           />
@@ -1376,7 +1376,7 @@ const CreateKey: React.FC<CreateKeyProps> = ({ team, teams, data, addKey, autoOp
                         {(control) => (
                           <NumericalInput
                             {...control}
-                            value={control.value as number | string | undefined}
+                            value={(control.value as number | string | undefined) ?? ""}
                             step={1}
                             width={400}
                           />

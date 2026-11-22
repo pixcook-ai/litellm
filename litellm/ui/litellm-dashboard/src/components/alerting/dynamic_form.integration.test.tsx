@@ -61,17 +61,13 @@ const renderForm = (
   const handleInputChange = overrides.handleInputChange ?? vi.fn();
   const handleResetField = overrides.handleResetField ?? vi.fn();
   render(
-    <table>
-      <tbody>
-        <DynamicForm
-          alertingSettings={overrides.settings ?? SETTINGS}
-          handleInputChange={handleInputChange}
-          handleResetField={handleResetField}
-          handleSubmit={handleSubmit}
-          premiumUser={overrides.premiumUser ?? false}
-        />
-      </tbody>
-    </table>,
+    <DynamicForm
+      alertingSettings={overrides.settings ?? SETTINGS}
+      handleInputChange={handleInputChange}
+      handleResetField={handleResetField}
+      handleSubmit={handleSubmit}
+      premiumUser={overrides.premiumUser ?? false}
+    />,
   );
   return { handleSubmit, handleInputChange, handleResetField };
 };
@@ -240,5 +236,28 @@ describe("DynamicForm presentation", () => {
     expect(screen.getAllByText("In DB")).toHaveLength(2);
     expect(screen.getByText("In Config")).toBeInTheDocument();
     expect(screen.getByText("Not Set")).toBeInTheDocument();
+  });
+});
+
+describe("DynamicForm nullable settings", () => {
+  it("reports text values to the parent without passing React events", async () => {
+    const { handleInputChange } = renderForm();
+    const user = userEvent.setup();
+    await user.type(screen.getByDisplayValue("us-east"), "Z");
+    expect(handleInputChange).toHaveBeenLastCalledWith("region_name", "us-eastZ");
+  });
+
+  it("keeps an unset boolean controlled while the user enables it", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { handleSubmit } = renderForm({ settings: [{ ...SETTINGS[2], field_value: null }] });
+    const user = userEvent.setup();
+    expect(screen.getByRole("switch")).not.toBeChecked();
+    await user.click(screen.getByRole("switch"));
+    await submit(user);
+    expect(handleSubmit).toHaveBeenCalledWith({ slack_alerting: true });
+    expect(consoleError.mock.calls.flat().join(" ")).not.toMatch(
+      /controlled.*uncontrolled|uncontrolled.*controlled|cannot be a child/i,
+    );
+    consoleError.mockRestore();
   });
 });

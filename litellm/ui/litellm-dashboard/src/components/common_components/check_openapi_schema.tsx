@@ -220,7 +220,7 @@ const SchemaFormFields: React.FC<SchemaFormFieldsProps> = ({
             return (
               <Textarea
                 {...control}
-                value={control.value as string | undefined}
+                value={(control.value as string | undefined) ?? ""}
                 rows={4}
                 placeholder={t("commonComponents.checkOpenapiSchema.jsonPlaceholder")}
                 className="font-mono"

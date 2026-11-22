@@ -697,7 +697,7 @@ export function DataTable<TData extends RowData, TValue>(props: DataTableProps<T
 
   return (
     <div data-testid="data-table-root" className={dataTableRoot({ fill: fillHeight })}>
-      <div data-testid="data-table-frame" className={dataTableFrame({ fill: fillHeight })}>
+      <div data-slot="data-table-frame" data-testid="data-table-frame" className={dataTableFrame({ fill: fillHeight })}>
         {toolbar !== undefined && <div className="shrink-0 border-b border-border px-4 py-3">{toolbar(table)}</div>}
         <div
           data-testid="data-table-scroller"

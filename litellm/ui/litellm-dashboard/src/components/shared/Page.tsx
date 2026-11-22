@@ -5,7 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/cva.config";
 
 export function Page({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("flex min-h-0 min-w-0 w-full flex-col gap-6 p-4 sm:p-6", className)} {...props} />;
+  return (
+    <div
+      data-slot="page"
+      className={cn("flex min-h-0 min-w-0 w-full flex-col gap-6 p-4 sm:p-6", className)}
+      {...props}
+    />
+  );
 }
 
 export function PageContent({ className, ...props }: ComponentProps<"div">) {
@@ -19,20 +25,15 @@ export function PageTabs({ className, ...props }: ComponentProps<typeof Tabs>) {
 export function PageTabsList({ className, ...props }: ComponentProps<typeof TabsList>) {
   return (
     <TabsList
-      variant="line"
-      className={cn("h-10 w-full shrink-0 justify-start gap-6 overflow-x-auto border-b border-border p-0", className)}
+      variant="default"
+      className={cn("h-10 max-w-full shrink-0 justify-start gap-1 overflow-x-auto", className)}
       {...props}
     />
   );
 }
 
 export function PageTabsTrigger({ className, ...props }: ComponentProps<typeof TabsTrigger>) {
-  return (
-    <TabsTrigger
-      className={cn("flex-none px-0 font-normal group-data-horizontal/tabs:after:bottom-0", className)}
-      {...props}
-    />
-  );
+  return <TabsTrigger className={cn("flex-none px-4 font-medium", className)} {...props} />;
 }
 
 export function PageTabsContent({ className, ...props }: ComponentProps<typeof TabsContent>) {

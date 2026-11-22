@@ -7,3 +7,5 @@ The local Button, Card, Input, Textarea, SelectTrigger and InputGroup use Luma a
 When merging upstream, keep the theme import after the upstream declarations, review new tokens and merge primitive behavior changes before reapplying Luma appearance. Do not overwrite the component directory with the preset installer. `components.json` records `base-luma` for future component generation. Its preset chart colors intentionally differ from this fork's retained categorical chart colors.
 
 Validate light and dark access groups, the creation dialog, home cards and Lens. Run targeted Button, Select and Badge tests, ESLint on changed primitives and the dashboard typecheck. Live trace data, every dashboard route and narrow viewports have not been fully verified.
+
+Shared surfaces use stable `data-slot` selectors in the theme layer. These cover the workspace background, table frames, dialogs, menus, tabs, sidebar navigation and Lens panels. Page tabs use the shared segmented variant. Keep functional size, scrolling and positioning classes in their components. Treat new page-specific surfaces as integration work rather than overriding every rounded element globally.

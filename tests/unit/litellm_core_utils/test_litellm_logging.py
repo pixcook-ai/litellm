@@ -5712,6 +5712,206 @@ def test_logging_preserves_missing_usage_without_accepting_request_metadata(
     assert (payload["prompt_tokens"], payload["completion_tokens"], payload["total_tokens"]) == (0, 0, 0)
 
 
+@pytest.mark.parametrize("stream", (False, True))
+@pytest.mark.parametrize("native", (False, True))
+def test_supplier_usage_uses_actual_attempt_not_combined_customer_usage(
+    logging_obj: Logging, stream: bool, native: bool
+) -> None:
+    from litellm.proxy.spend_tracking.legacy_spend_log_rows import logging_payload
+    from litellm.proxy.spend_tracking.rust_spend_log_rows import spendlogs_payload_rust
+
+    started: Final = datetime_unit_test(2026, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc)
+    attempt_started: Final = started + datetime.timedelta(seconds=2)
+    actual: Final = ModelResponse(
+        id="provider-response",
+        model="supplier-deployment",
+        usage=Usage(
+            prompt_tokens=100,
+            completion_tokens=8,
+            prompt_tokens_details={"cached_tokens": 40, "cache_write_tokens": 10},
+        ),
+    )
+    payload: Final = get_standard_logging_object_payload(
+        kwargs={
+            "call_type": "acompletion",
+            "stream": stream,
+            "current_attempt_api_call_start_time": attempt_started,
+            "custom_llm_provider": "openai",
+            "combined_usage_object": Usage(prompt_tokens=200, completion_tokens=40),
+            "litellm_params": {
+                "metadata": {
+                    "model_info": {"id": "deployment-a"},
+                    "supplier_usage": {"model_id": "attacker-deployment", "prompt_tokens": 9999},
+                }
+            },
+        },
+        init_response_obj=actual,
+        start_time=started,
+        end_time=attempt_started,
+        logging_obj=logging_obj,
+        status="success",
+    )
+    assert payload is not None
+    snapshot: Final = payload["metadata"].get("supplier_usage")
+    assert snapshot is not None
+    assert (payload["prompt_tokens"], payload["completion_tokens"]) == (200, 40)
+    assert (snapshot["prompt_tokens"], snapshot["completion_tokens"]) == (100, 8)
+    assert snapshot["model_id"] == "deployment-a"
+    assert snapshot["started_at"] == attempt_started.isoformat()
+    assert (snapshot["cache_read_tokens"], snapshot["cache_write_tokens"]) == (40, 10)
+    builder: Final = spendlogs_payload_rust if native else logging_payload
+    stored: Final = builder(
+        kwargs={
+            "call_type": "acompletion",
+            "standard_logging_object": payload,
+            "litellm_params": {"metadata": {"supplier_usage": {"model_id": "attacker-deployment"}}},
+        },
+        response_obj=actual,
+        start_time=started,
+        end_time=attempt_started,
+        llm_router=None,
+    )
+    assert json.loads(stored["metadata"])["supplier_usage"] == snapshot
+
+
+@pytest.mark.parametrize(("status", "cache_hit"), (("success", True), ("failure", False)))
+def test_supplier_usage_cannot_be_forged_on_cached_or_failed_calls(
+    logging_obj: Logging, status: Literal["success", "failure"], cache_hit: bool
+) -> None:
+    started: Final = datetime_unit_test(2026, 1, 1, tzinfo=datetime.timezone.utc)
+    payload: Final = get_standard_logging_object_payload(
+        kwargs={
+            "call_type": "acompletion",
+            "cache_hit": cache_hit,
+            "custom_llm_provider": "openai",
+            "litellm_params": {
+                "metadata": {
+                    "model_info": {"id": "deployment-a"},
+                    "supplier_usage": {"model_id": "attacker-deployment", "prompt_tokens": 9999},
+                }
+            },
+        },
+        init_response_obj=ModelResponse(usage=Usage(prompt_tokens=100, completion_tokens=8)),
+        start_time=started,
+        end_time=started,
+        logging_obj=logging_obj,
+        status=status,
+    )
+    assert payload is not None
+    assert payload["metadata"].get("supplier_usage") is None
+
+
+@pytest.mark.parametrize(
+    ("reported_usage", "payable"),
+    (
+        (None, False),
+        (Usage(prompt_tokens=100), False),
+        (Usage(completion_tokens=8), False),
+        (Usage(prompt_tokens=100, completion_tokens=8), True),
+        (Usage(prompt_tokens=100, completion_tokens=0), True),
+    ),
+)
+def test_supplier_stream_requires_both_reported_counts_without_changing_customer_usage(
+    logging_obj: Logging, reported_usage: Usage | None, payable: bool
+) -> None:
+    from litellm.types.utils import Delta, ModelResponseStream, StreamingChoices
+
+    started: Final = datetime_unit_test(2026, 1, 1, tzinfo=datetime.timezone.utc)
+    chunks: Final = [
+        ModelResponseStream(
+            id="supplier-stream",
+            model="supplier-provenance-test",
+            created=1,
+            choices=[StreamingChoices(index=0, delta=Delta(content="reply"), finish_reason="stop")],
+            **({"usage": reported_usage} if reported_usage is not None else {}),
+        )
+    ]
+    response: Final = litellm.stream_chunk_builder(chunks, count_prompt_tokens=lambda: 31)
+    assert response is not None
+    payload: Final = get_standard_logging_object_payload(
+        kwargs={
+            "call_type": "acompletion",
+            "stream": True,
+            "litellm_params": {"metadata": {"model_info": {"id": "deployment-a"}}},
+            "custom_llm_provider": "openai",
+        },
+        init_response_obj=response,
+        start_time=started,
+        end_time=started,
+        logging_obj=logging_obj,
+        status="success",
+    )
+    assert payload is not None
+    assert payload["prompt_tokens"] == response.usage.prompt_tokens
+    assert payload["completion_tokens"] == response.usage.completion_tokens
+    assert payload["total_tokens"] > 0
+    assert (payload["metadata"].get("supplier_usage") is not None) is payable
+
+
+@pytest.mark.parametrize("reported", (False, True))
+def test_supplier_native_responses_logging_copy_preserves_usage_provenance_and_client_json(reported: bool) -> None:
+    from litellm.responses.streaming_iterator import _estimate_usage_safely, _logging_copy
+    from litellm.types.llms.openai import ResponseAPIUsage, ResponseCompletedEvent, ResponsesAPIResponse
+
+    started: Final = datetime_unit_test(2026, 1, 1, tzinfo=datetime.timezone.utc)
+    logger: Final = Logging(
+        model="supplier-provenance-test",
+        messages=[],
+        stream=True,
+        call_type="aresponses",
+        start_time=0.0,
+        litellm_call_id="supplier-native-responses",
+        function_id="test",
+    )
+    usage: Final = (
+        ResponseAPIUsage(input_tokens=100, output_tokens=8, total_tokens=108)
+        if reported
+        else _estimate_usage_safely(
+            "supplier-provenance-test",
+            "input",
+            {"input": "input"},
+            "reply",
+            use_default_image_token_count=False,
+            logging_obj=logger,
+        )
+    )
+    assert usage is not None
+    event: Final = ResponseCompletedEvent(
+        type="response.completed",
+        response=ResponsesAPIResponse(
+            id="supplier-native-response",
+            created_at=1,
+            status="completed",
+            model="supplier-provenance-test",
+            object="response",
+            output=[],
+            usage=usage,
+        ),
+    )
+    client_json: Final = event.model_dump_json()
+    assembled: Final = logger._get_assembled_streaming_response(
+        _logging_copy(event), start_time=started, end_time=started, is_async=True, streaming_chunks=[]
+    )
+    payload: Final = get_standard_logging_object_payload(
+        kwargs={
+            "call_type": "aresponses",
+            "stream": True,
+            "custom_llm_provider": "openai",
+            "litellm_params": {"metadata": {"model_info": {"id": "deployment-a"}}},
+        },
+        init_response_obj=assembled,
+        start_time=started,
+        end_time=started,
+        logging_obj=logger,
+        status="success",
+    )
+    assert payload is not None
+    assert payload["prompt_tokens"] == usage.input_tokens
+    assert payload["completion_tokens"] == usage.output_tokens
+    assert (payload["metadata"].get("supplier_usage") is not None) is reported
+    assert event.model_dump_json() == client_json
+
+
 @pytest.mark.parametrize(
     ("meta", "expected"),
     [

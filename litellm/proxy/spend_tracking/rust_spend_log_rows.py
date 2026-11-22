@@ -99,6 +99,7 @@ _PAYLOAD_KEYS: Final = frozenset(
 _STORED_PROMPT_PAYLOAD_KEYS: Final = frozenset({"response"})
 _PAYLOAD_METADATA_KEYS: Final = frozenset(
     {
+        "supplier_usage",
         "user_api_key_hash",
         "user_api_key_alias",
         "user_api_key_end_user_id",

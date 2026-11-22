@@ -634,6 +634,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
         except openai.BadRequestError as e:
             if not is_output_token_limit_error(e):
                 raise
+            logging_obj.mark_estimated_usage()
             return build_output_token_limit_response(
                 e=e,
                 data=data,
@@ -686,6 +687,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
         except openai.BadRequestError as e:
             if not is_output_token_limit_error(e):
                 raise
+            logging_obj.mark_estimated_usage()
             return build_output_token_limit_response(
                 e=e,
                 data=data,

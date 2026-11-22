@@ -9,6 +9,83 @@ generator client {
   binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
+model LiteLLM_SupplierAccount {
+  id            String   @id @default(uuid())
+  owner_user_id String   @unique
+  revision      Int      @default(1)
+  display_name  String
+  contact_email String
+  website       String
+  endpoint_url  String
+  models        String
+  capacity      String
+  status        String   @default("pending")
+  review_note   String?
+  reviewed_by   String?
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+  rates         LiteLLM_SupplierRate[]
+  ledger        LiteLLM_SupplierLedger[]
+  settlements   LiteLLM_SupplierSettlement[]
+
+  @@index([status, created_at])
+}
+
+model LiteLLM_SupplierRate {
+  id                      String   @id @default(uuid())
+  supplier_id             String
+  model_id                String
+  input_per_million       Decimal  @db.Decimal(38, 18)
+  output_per_million      Decimal  @db.Decimal(38, 18)
+  cache_read_per_million   Decimal  @db.Decimal(38, 18)
+  cache_write_per_million  Decimal  @db.Decimal(38, 18)
+  effective_at            DateTime @default(now()) @db.Timestamptz(6)
+  created_by              String
+  supplier                LiteLLM_SupplierAccount @relation(fields: [supplier_id], references: [id], onDelete: Restrict)
+  ledger                  LiteLLM_SupplierLedger[]
+
+  @@index([model_id, effective_at])
+  @@index([supplier_id])
+}
+
+model LiteLLM_SupplierLedger {
+  id                  String   @id
+  supplier_id         String
+  kind                String
+  request_id          String?
+  rate_id             String?
+  model_id            String?
+  prompt_tokens       BigInt   @default(0)
+  completion_tokens   BigInt   @default(0)
+  cache_read_tokens   BigInt   @default(0)
+  cache_write_tokens  BigInt   @default(0)
+  amount              Decimal  @db.Decimal(65, 30)
+  reason              String?
+  created_by          String?
+  settlement_id       String?
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  supplier            LiteLLM_SupplierAccount @relation(fields: [supplier_id], references: [id], onDelete: Restrict)
+  rate                LiteLLM_SupplierRate? @relation(fields: [rate_id], references: [id], onDelete: Restrict)
+  settlement          LiteLLM_SupplierSettlement? @relation(fields: [settlement_id], references: [id], onDelete: Restrict)
+
+  @@index([supplier_id, created_at, id])
+  @@index([supplier_id, settlement_id])
+}
+
+model LiteLLM_SupplierSettlement {
+  id            String   @id
+  supplier_id   String
+  amount        Decimal  @db.Decimal(65, 30)
+  reference     String
+  ledger_ids    String[]
+  created_by    String
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  supplier      LiteLLM_SupplierAccount @relation(fields: [supplier_id], references: [id], onDelete: Restrict)
+  ledger        LiteLLM_SupplierLedger[]
+
+  @@index([supplier_id, created_at, id])
+}
+
 // Budget / Rate Limits for an org
 model LiteLLM_BudgetTable {
   apps LiteLLM_AppTable[] @relation("AppBudget")

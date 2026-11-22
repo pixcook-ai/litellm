@@ -6,7 +6,8 @@
 //! a pattern added to `SensitiveDataMasker`, a header added to the client IP list.
 
 /// `SpendLogsMetadata.__annotations__`, in order: the keys of the stored metadata JSON.
-pub(crate) const SPEND_LOGS_METADATA_FIELDS: [&str; 65] = [
+pub(crate) const SPEND_LOGS_METADATA_FIELDS: [&str; 66] = [
+    "supplier_usage",
     "user_api_key_customer_org_id",
     "user_api_key_app_id",
     "user_api_key_app_alias",
@@ -75,7 +76,8 @@ pub(crate) const SPEND_LOGS_METADATA_FIELDS: [&str; 65] = [
 ];
 
 /// `_STAMPED_METADATA_KEYS`: metadata keys the row stamps itself instead of copying.
-pub(crate) const STAMPED_METADATA_KEYS: [&str; 22] = [
+pub(crate) const STAMPED_METADATA_KEYS: [&str; 23] = [
+    "supplier_usage",
     "router_metadata",
     "azure_spillover",
     "autorouter_savings",
@@ -249,7 +251,8 @@ pub(crate) const BEDROCK_GUARDRAIL_TRACE_FIELDS: [&str; 2] = ["trace", "amazon-b
 pub(crate) const MATCHED_TEXT_KEYS: [&str; 2] = ["match", "regex"];
 
 /// `_METADATA_FIELDS` from `accounting/snapshot.py`: the row metadata the accounting payload keeps.
-pub(crate) const ACCOUNTING_METADATA_FIELDS: [&str; 9] = [
+pub(crate) const ACCOUNTING_METADATA_FIELDS: [&str; 10] = [
+    "supplier_usage",
     "usage_object",
     "status",
     "guardrail_information",

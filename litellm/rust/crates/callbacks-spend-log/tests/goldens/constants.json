@@ -1,5 +1,6 @@
 {
  "SpendLogsMetadata": [
+  "supplier_usage",
   "user_api_key_customer_org_id",
   "user_api_key_app_id",
   "user_api_key_app_alias",
@@ -124,6 +125,7 @@
   "litellm_roi_estimator",
   "route_call_type",
   "router_metadata",
+  "supplier_usage",
   "upstream_provider",
   "used_client_oauth_token",
   "user_api_key_app_alias",
@@ -232,6 +234,7 @@
   "route_call_type",
   "standard_logging_guardrail_information",
   "status",
+  "supplier_usage",
   "usage_object",
   "user_api_key_customer_usage"
  ],

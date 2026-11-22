@@ -442,6 +442,10 @@ def _attempt_spend_row_kwargs(
             row["standard_logging_object"] = {
                 **payload,
                 "id": f"{payload['id']}{suffix}",
+                "metadata": {
+                    **_BATCH_CALLBACK_FIELDS.validate_python(payload.get("metadata") or {}),
+                    "supplier_usage": None,
+                },
                 **({} if deployment is None else {**attribution, "model_id": attempt.deployment_id}),
             }
     return row

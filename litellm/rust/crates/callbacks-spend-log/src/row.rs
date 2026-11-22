@@ -570,6 +570,9 @@ pub(crate) fn build(
         builder.sanitize_guardrail_information(&guardrail_information, input),
     );
     clean.set("usage_object", attribution.metadata("usage_object").clone());
+    if let snapshot @ Value::Dict(_) = attribution.metadata("supplier_usage") {
+        clean.set("supplier_usage", snapshot.clone());
+    }
     clean.set("model_map_information", model_map_information);
     clean.set(
         "cold_storage_object_key",

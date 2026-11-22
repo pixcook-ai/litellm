@@ -1,6 +1,9 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Final
+
+from pydantic import TypeAdapter
 
 from litellm.accounting.delivery_projection import entity_transactions, project_deliveries
 from litellm.accounting.projection import Contribution
@@ -14,7 +17,11 @@ from litellm.proxy.db.db_transaction_queue.window_spend_update_queue import (
 from litellm.proxy.db.model_usage_rollup import queue_model_usage_upsert
 from litellm.proxy.db.rollup_lock_timeout import apply_rollup_lock_timeout
 from litellm.proxy.spend_tracking.customer_budget_alerts import CustomerBudgetAlerting
+from litellm.proxy.supplier_portal.accounting import accrue_usages
+from litellm.proxy.supplier_portal.models import SupplierUsage
 from litellm.repositories.accounting_delivery_repository import DeliveryProjection, LedgerTransaction
+
+_METADATA: Final = TypeAdapter(dict[str, object])
 
 if TYPE_CHECKING:
     from litellm.proxy.db.db_spend_update_writer import DBSpendUpdateWriter
@@ -71,7 +78,17 @@ async def apply_deliveries(
     committed: Final = await commit_window_spend_updates(
         prisma_client, windows, outer_transaction=transaction, capture_spend=bool(CustomerBudgetAlerting.callbacks())
     )
+    usages: Final = tuple(usage for delivery in deliveries if (usage := _supplier_usage(delivery)) is not None)
+    await accrue_usages(transaction, usages)
     return AppliedDeliveries(contributions, committed)
+
+
+def _supplier_usage(delivery: DeliveryProjection) -> SupplierUsage | None:
+    metadata: Final = delivery.row.get("metadata")
+    if not isinstance(metadata, Mapping):
+        return None
+    snapshot: Final = _METADATA.validate_python(metadata).get("supplier_usage")
+    return SupplierUsage.model_validate(snapshot) if snapshot is not None else None
 
 
 def _window(item: Contribution) -> WindowSpendTransaction:

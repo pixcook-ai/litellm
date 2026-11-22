@@ -24,6 +24,37 @@ _NOW: Final = datetime(2026, 11, 2, tzinfo=timezone.utc)
 _FIELDS: Final = TypeAdapter(dict[str, object])
 
 
+def test_supplier_snapshot_survives_durable_projection_without_changing_customer_spend() -> None:
+    row: Final = get_logging_payload(
+        kwargs={"call_type": "acompletion", "litellm_params": {"metadata": {"status": "success"}}},
+        response_obj=ModelResponse(usage=Usage(prompt_tokens=120, completion_tokens=20)),
+        start_time=_NOW,
+        end_time=_NOW,
+    )
+    snapshot: Final = {
+        "request_id": "provider-attempt",
+        "model_id": "supplier-deployment",
+        "started_at": _NOW.isoformat(),
+        "prompt_tokens": 100,
+        "completion_tokens": 8,
+        "cache_read_tokens": 40,
+        "cache_write_tokens": 10,
+    }
+    with_supplier: Final[SpendLogsPayload] = {
+        **row,
+        "metadata": json.dumps({**_FIELDS.validate_json(row["metadata"]), "supplier_usage": snapshot}),
+    }
+    accounting: Final = build_accounting_payload(
+        with_supplier, entities={}, model_access_groups=(), windows=(), router=lambda: None
+    )
+    baseline: Final = build_accounting_payload(
+        row, entities={}, model_access_groups=(), windows=(), router=lambda: None
+    )
+    assert _FIELDS.validate_python(accounting["metadata"])["supplier_usage"] == snapshot
+    assert project(accounting) == project(baseline)
+    assert (accounting["prompt_tokens"], accounting["completion_tokens"]) == (120, 20)
+
+
 def test_customer_daily_totals_stay_separate_per_model_alias_and_provider() -> None:
     stamp: Final = CustomerUsageAttribution(customer_org_id="org-1", customer_member_id="member-1").model_dump_json()
     base: Final = {

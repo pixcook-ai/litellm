@@ -2066,6 +2066,7 @@ class Usage(SafeAttributeModel, CompletionUsage):
         0
     )  # hidden param for prompt caching. Might change, once openai introduces their equivalent.
     _dropped_non_finite_cost: bool = PrivateAttr(False)
+    _reported_token_counts: tuple[bool, bool] = PrivateAttr((False, False))
 
     server_tool_use: ServerToolUse | None = None
     cost: float | None = None
@@ -2195,6 +2196,14 @@ class Usage(SafeAttributeModel, CompletionUsage):
         for k, v in params.items():
             setattr(self, k, v)
         self._dropped_non_finite_cost = dropped_non_finite_cost
+        self._reported_token_counts = (prompt_tokens is not None, completion_tokens is not None)
+
+    @property
+    def reported_token_counts(self) -> tuple[bool, bool]:
+        return self._reported_token_counts
+
+    def mark_estimated_tokens(self) -> None:
+        self._reported_token_counts = (False, False)
 
     @staticmethod
     def dropped_non_finite_cost(usage: "Usage") -> bool:
@@ -2369,17 +2378,13 @@ class ModelResponseStream(ModelResponseBase):
         else:
             created = created
 
-        usage_to_set = None
-        if "usage" in kwargs and kwargs["usage"] is not None:
-            if isinstance(kwargs["usage"], dict):
-                usage_to_set = Usage(**kwargs["usage"])
-                kwargs["usage"] = usage_to_set
-            elif isinstance(kwargs["usage"], BaseModel):
-                dump: Final = (
-                    kwargs["usage"].model_dump() if hasattr(kwargs["usage"], "model_dump") else kwargs["usage"].dict()
-                )
-                usage_to_set = Usage(**dump)
-                kwargs["usage"] = usage_to_set
+        usage_to_set: Final = (
+            _normalize_model_response_usage(kwargs["usage"])
+            if isinstance(kwargs.get("usage"), (dict, BaseModel))
+            else None
+        )
+        if usage_to_set is not None:
+            kwargs["usage"] = usage_to_set
 
         kwargs["id"] = id
         kwargs["created"] = created
@@ -2412,9 +2417,11 @@ class ModelResponseStream(ModelResponseBase):
 
 
 def _normalize_model_response_usage(usage: Mapping[str, object] | BaseModel) -> Usage:
+    if isinstance(usage, Usage):
+        return usage.model_copy()
     if isinstance(usage, dict):
         return Usage(**usage)
-    dump: Final = usage.model_dump() if hasattr(usage, "model_dump") else usage.dict()
+    dump: Final = usage.model_dump(exclude_unset=True) if hasattr(usage, "model_dump") else usage.dict()
     return Usage(**dump)
 
 
@@ -3600,6 +3607,7 @@ class StandardLoggingMetadata(StandardLoggingUserAPIKeyMetadata):
     team_id: str | None
     used_client_oauth_token: ReadOnly[bool | None]
     claude_subscription_usage: NotRequired[ReadOnly[ClaudeSubscriptionUsage | None]]
+    supplier_usage: NotRequired[ReadOnly[Mapping[str, object] | None]]
     is_silent_experiment: ReadOnly[NotRequired[bool]]
 
 

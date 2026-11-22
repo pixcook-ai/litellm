@@ -1205,6 +1205,9 @@ class ChunkProcessor:
         # # Update usage information if needed
 
         calculated_usage_per_chunk: Final = self._calculate_usage_per_chunk(chunks=chunks)
+        reported_token_counts: Final = tuple(
+            usage.reported_token_counts for usage in map(self.extract_usage_chunk, chunks) if usage is not None
+        )
         prompt_tokens: Final = calculated_usage_per_chunk["prompt_tokens"]
         completion_tokens: Final = calculated_usage_per_chunk["completion_tokens"]
         ## anthropic prompt caching information ##
@@ -1302,9 +1305,17 @@ class ChunkProcessor:
             if value is not None
         }
 
-        returned_usage = Usage(**_usage_fields(returned_usage.model_dump()), **provider_pricing_fields)
-
-        return returned_usage
+        final_usage: Final = Usage(**_usage_fields({**returned_usage.model_dump(), **provider_pricing_fields}))
+        if (
+            prompt_tokens is None
+            or completion_tokens is None
+            or not (
+                any(counts[0] for counts in reported_token_counts)
+                and any(counts[1] for counts in reported_token_counts)
+            )
+        ):
+            final_usage.mark_estimated_tokens()
+        return final_usage
 
 
 def concatenate_base64_list(base64_strings: Sequence[str]) -> str:

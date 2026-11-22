@@ -460,6 +460,7 @@ class _ParsedChunkHiddenParams(LiteLLMBaseModel):
 
 
 _DECODED_JSON: Final = TypeAdapter(object)
+_PROVIDER_USAGE_MODEL: Final = TypeAdapter(BaseModel)
 
 
 def _provider_response_model(chunk: object) -> str | None:
@@ -1927,10 +1928,11 @@ class CustomStreamWrapper:
                         response_obj["usage"],
                     )
                 elif isinstance(response_obj["usage"], BaseModel):
+                    reported_usage: Final = _PROVIDER_USAGE_MODEL.validate_python(response_obj["usage"])
                     setattr(
                         model_response,
                         "usage",
-                        litellm.Usage(**response_obj["usage"].model_dump()),
+                        _usage_from_payload(reported_usage.model_dump(exclude_unset=True)),
                     )
         return _ProviderChunkParsed(response_obj)
 

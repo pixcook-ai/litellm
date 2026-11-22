@@ -1575,6 +1575,9 @@ class Logging(LiteLLMLoggingBaseClass):
             deployment_model=self.get_deployment_model_for_cost(),
         )
 
+    def mark_estimated_usage(self) -> None:
+        self.model_call_details = {**self.model_call_details, "_supplier_usage_estimated": True}
+
     def update_environment_variables(
         self,
         litellm_params: dict,
@@ -6261,6 +6264,7 @@ class Logging(LiteLLMLoggingBaseClass):
         ):
             ## return unified Usage object
             if isinstance(result.response.usage, ResponseAPIUsage):
+                set_hidden_param(result.response, "_supplier_usage_reported", True)
                 set_response_cost_in_hidden_params(
                     result.response,
                     provider_reported_usage_cost(
@@ -8929,6 +8933,8 @@ def get_standard_logging_object_payload(
     original_exception: Exception | None = None,
     standard_built_in_tools_params: StandardBuiltInToolsParams | None = None,
 ) -> StandardLoggingPayload | None:
+    from litellm.litellm_core_utils.supplier_usage import supplier_usage_snapshot, supplier_usage_was_reported
+
     try:
         kwargs = kwargs or {}
 
@@ -8998,10 +9004,33 @@ def get_standard_logging_object_payload(
             custom_llm_provider=selected_provider if isinstance(selected_provider, str) else None,
             is_silent_experiment=logging_obj.is_silent_experiment is True,
         )
-        subscription_details: Final = {**logging_obj.model_call_details, **_METADATA_MAPPING.validate_python(kwargs)}
+        payload_details: Final = _METADATA_MAPPING.validate_python(kwargs)
+        subscription_details: Final = {**logging_obj.model_call_details, **payload_details}
         clean_metadata: Final[StandardLoggingMetadata] = {
             **base_metadata,
             "claude_subscription_usage": claude_subscription_usage(subscription_details, init_response_obj),
+            "supplier_usage": supplier_usage_snapshot(
+                usage=_METADATA_MAPPING.validate_python(
+                    StandardLoggingPayloadSetup.get_usage_as_dict(_METADATA_MAPPING.validate_python(response_obj))
+                ),
+                call_id=logging_obj.litellm_call_id,
+                model_id=_model_id if isinstance(_model_id, str) else "",
+                started_at=(
+                    attempt_start
+                    if isinstance(
+                        attempt_start := payload_details.get("current_attempt_api_call_start_time"), dt_object
+                    )
+                    else start_time
+                ),
+                call_type=call_type if isinstance(call_type, str) else "",
+                status=status,
+                cache_hit=cache_hit is True or served_from_cache(init_response_obj),
+                custom_llm_provider=selected_provider if isinstance(selected_provider, str) else "",
+                usage_reported=(
+                    supplier_usage_was_reported(init_response_obj)
+                    and logging_obj.model_call_details.get("_supplier_usage_estimated") is not True
+                ),
+            ),
         }
         _request_body: Final = proxy_server_request.get("body", {})
         end_user_id: Final = clean_metadata["user_api_key_end_user_id"] or _request_body.get(

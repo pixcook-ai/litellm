@@ -169,6 +169,7 @@ def redact_logged_api_key(value: str | None, *, already_redacted: bool = False, 
 
 _STAMPED_METADATA_KEYS: Final = frozenset(
     (
+        "supplier_usage",
         "router_metadata",
         "azure_spillover",
         "autorouter_savings",
@@ -201,6 +202,10 @@ class _UpstreamProviderMetadata(TypedDict, total=False):
 
 class _RouteCallTypeMetadata(TypedDict, total=False):
     route_call_type: ReadOnly[str]
+
+
+class _SupplierUsageMetadata(TypedDict, total=False):
+    supplier_usage: ReadOnly[Mapping[str, object]]
 
 
 def _adapter_route_call_type(  # pyright: ignore[reportUnusedFunction]  # shared with legacy_spend_log_rows and rust_spend_log_rows
@@ -264,6 +269,7 @@ def _get_spend_logs_metadata(  # pyright: ignore[reportUnusedFunction]  # shared
     vector_store_request_metadata: list[StandardLoggingVectorStoreRequest] | None = None,
     guardrail_information: list[StandardLoggingGuardrailInformation] | None = None,
     usage_object: dict | None = None,
+    supplier_usage: Mapping[str, object] | None = None,
     model_map_information: StandardLoggingModelInformation | None = None,
     cold_storage_object_key: str | None = None,
     litellm_overhead_time_ms: float | None = None,
@@ -281,6 +287,9 @@ def _get_spend_logs_metadata(  # pyright: ignore[reportUnusedFunction]  # shared
     is_silent_experiment: bool = False,
     route_call_type: str | None = None,
 ) -> SpendLogsMetadata:
+    supplier_metadata: Final[_SupplierUsageMetadata] = (
+        {"supplier_usage": supplier_usage} if supplier_usage is not None else {}
+    )
     upstream_provider_metadata: Final[_UpstreamProviderMetadata] = (
         {"upstream_provider": upstream_provider} if upstream_provider is not None else {}
     )
@@ -313,6 +322,7 @@ def _get_spend_logs_metadata(  # pyright: ignore[reportUnusedFunction]  # shared
             vector_store_request_metadata=None,
             model_map_information=None,
             usage_object=None,
+            **supplier_metadata,
             guardrail_information=None,
             internal_call_origin=None,
             litellm_roi_estimator=False,
@@ -362,6 +372,7 @@ def _get_spend_logs_metadata(  # pyright: ignore[reportUnusedFunction]  # shared
         litellm_roi_estimator=metadata.get("litellm_roi_estimator") is True,
         **(SilentExperimentFlag(is_silent_experiment=True) if is_silent_experiment else SilentExperimentFlag()),
         billed_retry_attempt=billed_retry_attempt,
+        **supplier_metadata,
         user_api_key_user_email=_stored_user_email(metadata),
     )
     _raw_key: Final = clean_metadata.get("user_api_key")

@@ -941,6 +941,11 @@ def logging_payload(
             if standard_logging_payload is not None
             else None
         ),
+        supplier_usage=(
+            standard_logging_payload["metadata"]["supplier_usage"]
+            if standard_logging_payload is not None and "supplier_usage" in standard_logging_payload["metadata"]
+            else None
+        ),
         model_map_information=(
             standard_logging_payload["model_map_information"] if standard_logging_payload is not None else None
         ),

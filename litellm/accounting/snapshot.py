@@ -26,6 +26,7 @@ def _mapping(value: object) -> Mapping[str, object] | None:
 
 _METADATA_FIELDS: Final = frozenset(
     {
+        "supplier_usage",
         "usage_object",
         "status",
         "guardrail_information",

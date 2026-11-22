@@ -676,6 +676,23 @@ class LiteLLMRoutes(enum.Enum):
         KeyManagementRoutes.KEY_UPDATE.value,
     )
 
+    supplier_self_routes = (
+        "/supplier/applications",
+        "/supplier/me",
+        "/supplier/ledger",
+        "/supplier/settlements",
+    )
+
+    supplier_admin_routes = (
+        "/supplier/admin/applications",
+        "/supplier/admin/applications/{supplier_id}/review",
+        "/supplier/admin/suppliers/{supplier_id}",
+        "/supplier/admin/ledger",
+        "/supplier/admin/settlements",
+        "/supplier/admin/rates",
+        "/supplier/admin/adjustments",
+    )
+
     management_routes = (
         [
             # user
@@ -757,6 +774,8 @@ class LiteLLMRoutes(enum.Enum):
         + mcp_management_routes
         + list(agent_management_routes)
         + list(skill_hub_routes)
+        + list(supplier_self_routes)
+        + list(supplier_admin_routes)
     )
 
     spend_tracking_routes = [
@@ -1014,6 +1033,7 @@ class LiteLLMRoutes(enum.Enum):
         # inside agent_endpoints/endpoints.py
         *agent_management_routes,
         *skill_hub_routes,
+        *supplier_self_routes,
     ]  # routes that manage their own allowed/disallowed logic
 
     ## Org Admin Routes ##
@@ -3969,6 +3989,7 @@ class SpendLogsRouterMetadata(TypedDict):
 
 
 class SpendLogsMetadata(TypedDict):
+    supplier_usage: ReadOnly[NotRequired[Mapping[str, object] | None]]
     user_api_key_customer_org_id: ReadOnly[NotRequired[str | None]]
     user_api_key_app_id: ReadOnly[NotRequired[str | None]]
     user_api_key_app_alias: ReadOnly[NotRequired[str | None]]

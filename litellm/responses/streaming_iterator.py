@@ -619,6 +619,7 @@ class BaseResponsesAPIStreamingIterator:
                                     self.request_data,
                                     self._generated_content + self._generated_tool_arguments,
                                     use_default_image_token_count=False,
+                                    logging_obj=self.logging_obj,
                                 )
                                 if _estimate_wanted
                                 else None
@@ -1899,15 +1900,19 @@ def _estimate_usage_safely(
     generated_text: str,
     *,
     use_default_image_token_count: bool,
+    logging_obj: LiteLLMLoggingObj | None = None,
 ) -> ResponseAPIUsage | None:
     try:
-        return _estimate_usage_from_text(
+        estimated: Final = _estimate_usage_from_text(
             model=model,
             request_input=request_input,
             responses_api_request=responses_api_request,
             generated_text=generated_text,
             use_default_image_token_count=use_default_image_token_count,
         )
+        if logging_obj is not None:
+            logging_obj.mark_estimated_usage()
+        return estimated
     except Exception as e:
         verbose_logger.debug("Could not estimate usage from stream text, billing $0: %s", e)
         return None

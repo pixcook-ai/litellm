@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Page } from "@/components/shared/Page";
 import { PageHeader, PageHeaderDescription, PageHeaderTitle } from "@/components/shared/PageHeader";
 import { isProxyAdminRole, isProxyAdminTierRole } from "@/utils/roles";
 import { uiHref } from "@/utils/uiHref";
@@ -232,7 +233,7 @@ export function SupplierPortal({ accessToken, userId, userRole, isViewOnly }: Po
     void queryClient.invalidateQueries({ queryKey: ["suppliers", userId] });
   };
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-7 p-4 sm:p-6 lg:p-8">
+    <Page>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <PageHeader className="min-w-0 max-w-full">
           <PageHeaderTitle>{t("suppliers.title")}</PageHeaderTitle>
@@ -256,6 +257,6 @@ export function SupplierPortal({ accessToken, userId, userRole, isViewOnly }: Po
       ) : (
         <MySupplierAccount accessToken={accessToken} userId={userId} isViewOnly={isViewOnly} onSaved={refresh} />
       )}
-    </div>
+    </Page>
   );
 }

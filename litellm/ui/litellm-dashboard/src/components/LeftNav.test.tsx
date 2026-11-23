@@ -7,6 +7,7 @@ import { TerminologyProvider } from "@/contexts/TerminologyContext";
 import { PluginModeProvider } from "@/contexts/PluginModeContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useCloseMobileSidebarOn } from "@/components/shared/MobileSidebar";
+import { BRAND_NAME } from "@/lib/brand";
 import LeftNav, { menuGroups, getBreadcrumb } from "./LeftNav";
 
 const Sidebar = ({ collapsed = false, ...props }: ComponentProps<typeof LeftNav> & { collapsed?: boolean }) => (
@@ -236,7 +237,7 @@ describe("Sidebar (leftnav)", () => {
   const collapsedLogos = () => {
     const home = within(screen.getByRole("link", { name: /litellm home/i }));
     return {
-      light: home.getByRole("img", { name: "LiteLLM" }),
+      light: home.getByRole("img", { name: BRAND_NAME }),
       dark: home.getByRole("presentation", { hidden: true }),
     };
   };

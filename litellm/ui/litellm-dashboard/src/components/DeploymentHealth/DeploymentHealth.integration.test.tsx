@@ -188,6 +188,7 @@ describe("deployment banner", () => {
     expect(banner).toHaveTextContent("Your LiteLLM Enterprise license expires in 3 days (Oct 17, 2026)");
     expect(banner).not.toHaveTextContent("No Redis configured");
     expect(banner).not.toHaveTextContent("more");
+    expect(banner).toHaveClass("!rounded-none");
   });
 
   it("should show the top warning when no critical warning is active", async () => {

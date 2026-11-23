@@ -44,16 +44,8 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 function LoginLogo() {
   return (
     <div className="flex justify-center">
-      <img
-        src={uiHref(BRAND_LOGO_PATH)}
-        alt={productNames.liteLLM}
-        className="h-10 w-auto dark:hidden"
-      />
-      <img
-        src={uiHref(BRAND_LOGO_PATH)}
-        alt={productNames.liteLLM}
-        className="hidden h-10 w-auto dark:block"
-      />
+      <img src={uiHref(BRAND_LOGO_PATH)} alt={productNames.liteLLM} className="h-10 w-auto dark:hidden" />
+      <img src={uiHref(BRAND_LOGO_PATH)} alt={productNames.liteLLM} className="hidden h-10 w-auto dark:block" />
     </div>
   );
 }

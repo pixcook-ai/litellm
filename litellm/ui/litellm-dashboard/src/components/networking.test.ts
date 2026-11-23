@@ -1296,13 +1296,11 @@ describe("getConfigFieldSetting - optional settings", () => {
   it("uses the supplied default only when the requested field is unset", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response(JSON.stringify({ detail: { error: "Field name=enable_public_model_hub is not set" } }), {
-            status: 400,
-          }),
-        ),
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ detail: { error: "Field name=enable_public_model_hub is not set" } }), {
+          status: 400,
+        }),
+      ),
     );
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
 

@@ -186,7 +186,7 @@ const ModelHubTable: React.FC<ModelHubTableProps> = ({
         setModelHubData(_modelHubData.data);
 
         if (!isChat) {
-          getConfigFieldSetting(accessToken, "enable_public_model_hub")
+          getConfigFieldSetting(accessToken, "enable_public_model_hub", { defaultValue: false })
             .then((data) => {
               if (data.field_value == true) {
                 setPublicPageAllowed(true);

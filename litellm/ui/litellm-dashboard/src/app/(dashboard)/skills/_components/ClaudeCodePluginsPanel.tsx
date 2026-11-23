@@ -185,7 +185,7 @@ const SkillsPanelContent: React.FC<ClaudeCodePluginsPanelProps> = ({
   };
 
   return (
-    <div className="w-full mx-auto flex-auto overflow-y-auto m-8 p-2">
+    <div data-page-layout="" className="w-full mx-auto flex-auto overflow-y-auto m-8 p-2">
       {selectedSkill ? (
         <CatalogSkillDetail
           userRole={userRole}

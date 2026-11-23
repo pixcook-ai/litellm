@@ -15,6 +15,7 @@ from litellm._logging import verbose_proxy_logger
 from litellm.constants import NON_LLM_CONNECTION_TIMEOUT
 from litellm.litellm_core_utils.core_helpers import as_str_mapping
 from litellm.llms.custom_httpx.http_handler import HTTPHandler
+from litellm.proxy.auth.edition import ENTERPRISE_FEATURES_ENABLED
 
 if TYPE_CHECKING:
     from litellm.proxy._types import EnterpriseLicenseData
@@ -51,7 +52,8 @@ class LicenseCheck:
 
     base_url = "https://license.litellm.ai"
 
-    def __init__(self) -> None:
+    def __init__(self, *, enterprise_features: bool = ENTERPRISE_FEATURES_ENABLED) -> None:
+        self.enterprise_features = enterprise_features
         self.license_str = os.getenv("LITELLM_LICENSE", None)
         verbose_proxy_logger.debug("License configured: %s", self.license_str is not None)
         self.http_handler = HTTPHandler(timeout=NON_LLM_CONNECTION_TIMEOUT)
@@ -122,6 +124,8 @@ class LicenseCheck:
         1. verify_license_without_api_request: checks if license was generate using private / public key pair
         2. _verify: checks if license is valid calling litellm API. This is the old way we were generating/validating license
         """
+        if self.enterprise_features:
+            return True
         try:
             if not self._premium_check_logged:
                 verbose_proxy_logger.debug(
@@ -151,6 +155,8 @@ class LicenseCheck:
             return False
 
     def user_seat_limit(self) -> int | None:
+        if self.enterprise_features:
+            return None
         if self.airgapped_license_data is None:
             return None
         max_users: Final = self.airgapped_license_data.get("max_users")
@@ -167,6 +173,8 @@ class LicenseCheck:
         """
         Check if the license is over the limit
         """
+        if self.enterprise_features:
+            return False
         if self.airgapped_license_data is None:
             return False
 
@@ -176,6 +184,8 @@ class LicenseCheck:
         return team_count > _max_teams_in_license
 
     def grants_feature(self, feature: str) -> bool:
+        if self.enterprise_features:
+            return True
         if self.airgapped_license_data is None:
             return False
         allowed_features: Final = self.airgapped_license_data.get("allowed_features")

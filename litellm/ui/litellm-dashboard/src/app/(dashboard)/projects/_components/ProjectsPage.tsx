@@ -61,7 +61,7 @@ export function ProjectsPage() {
 
   if (!premiumUser) {
     return (
-      <div className="mx-4 mt-4">
+      <div data-page-layout="" className="mx-4 mt-4">
         <p className="text-sm text-muted-foreground">
           <Trans
             i18nKey="projects.page.enterpriseNotice"

@@ -39,6 +39,7 @@ from litellm.litellm_core_utils.add_retry_fallback_headers import (
 from litellm.litellm_core_utils.core_helpers import as_str_mapping
 from litellm.litellm_core_utils.token_counter import offload_token_count
 from litellm.proxy._types import UserAPIKeyAuth
+from litellm.proxy.auth.edition import ENTERPRISE_FEATURES_ENABLED
 from litellm.proxy.common_utils.proxy_rate_limit_error import ProxyRateLimitError, map_v3_rate_limit_type
 from litellm.proxy.hooks.parallel_request_limiter_v3 import (
     RATE_LIMIT_UNVERIFIABLE_MESSAGE,
@@ -343,7 +344,9 @@ class CapacityHost:
         post_call: LimiterPostCall,
         window_size: int,
         media_model_resolver: MediaModelResolver | None = None,
+        enterprise_features: bool = ENTERPRISE_FEATURES_ENABLED,
     ) -> None:
+        self.enterprise_features: Final = enterprise_features
         self.post_call: Final = post_call
         self.window_size: Final = window_size
         self.media_model_resolver: Final = media_model_resolver
@@ -382,7 +385,7 @@ class CapacityHost:
             "priority_reservation": None
             if reservation is None
             else [[name, value] for name, value in reservation.items()],
-            "licensed": os.getenv("LITELLM_LICENSE", None) is not None,
+            "licensed": self.enterprise_features or os.getenv("LITELLM_LICENSE", None) is not None,
             "default_priority": settings.default_priority,
             "saturation_threshold": settings.saturation_threshold,
             "class_split": list(settings.priority_class_share_config.split_equally_among_active),

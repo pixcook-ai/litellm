@@ -124,9 +124,11 @@ describe("HomePage", () => {
   });
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("shows the usage totals from the daily activity API and links Create New Virtual Key to the key creation flow", async () => {
+    const consoleError = vi.spyOn(console, "error");
     renderHome();
     expect(screen.getByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
     expect(await screen.findByText("$501.74")).toBeInTheDocument();
@@ -137,6 +139,7 @@ describe("HomePage", () => {
       expect.stringMatching(/\/api-keys\?create=true$/),
     );
     expect(network.aggregated).toHaveBeenCalledWith("user", expect.objectContaining({ accessToken: "sk-test" }));
+    expect(consoleError.mock.calls.flat().join(" ")).not.toContain("expected a native <button>");
   });
 
   it("hides Create New Virtual Key from view-only users", () => {
@@ -232,6 +235,7 @@ describe("HomePage", () => {
   it("renders the blog posts fetched from /public/litellm_blog_posts in the Updates feed", async () => {
     renderHome();
     const updates = screen.getByTestId("home-updates");
+    expect(within(updates).getByRole("link", { name: "View all" })).toHaveAttribute("target", "_blank");
     expect(await within(updates).findByRole("link", { name: /post one/i })).toHaveAttribute("href", "https://x/1");
     expect(fetch).toHaveBeenCalledWith("http://proxy.test/public/litellm_blog_posts");
   });

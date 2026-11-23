@@ -316,7 +316,7 @@ const GeneralSettings: React.FC<GeneralSettingsPageProps> = ({ accessToken, user
   }
 
   return (
-    <div className="w-full">
+    <div data-slot="page-settings" className="w-full">
       <Tabs defaultValue="loadbalancing" className="h-[75vh] w-full">
         <TabsList variant="line" className="mx-8 mt-4">
           <TabsTrigger value="loadbalancing">{t("routerSettings.generalSettings.tabs.loadbalancing")}</TabsTrigger>

@@ -34,7 +34,7 @@ export default function HomePage() {
         <PageHeaderTitle>{t("home.page.title")}</PageHeaderTitle>
         {!isViewOnly && (
           <PageHeaderControls>
-            <Button render={<a href={uiHref("api-keys?create=true")} />}>
+            <Button nativeButton={false} role="link" render={<a href={uiHref("api-keys?create=true")} />}>
               <Plus />
               {t("home.page.createKey")}
             </Button>

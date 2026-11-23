@@ -261,6 +261,19 @@ afterEach(() => {
 });
 
 describe("Aria Agent in the gateway", () => {
+  it.each([undefined, null, 42])("ignores a shortcut event whose key is %s", async (key) => {
+    gateway([]);
+    renderWidget(undefined, false, false, { showPage: false });
+    await screen.findByRole("link", { name: "Aria Agent", exact: true });
+    const event = new KeyboardEvent("keydown", { ctrlKey: true, cancelable: true });
+    Object.defineProperty(event, "key", { value: key });
+    fireEvent(document, event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(push).not.toHaveBeenCalled();
+    fireEvent.keyDown(document, { key: "j", ctrlKey: true });
+    expect(push).toHaveBeenCalledWith("/ui/aria");
+  });
+
   it("sends a question and displays the answer without a secure browser context", async () => {
     vi.stubGlobal("crypto", { getRandomValues: crypto.getRandomValues.bind(crypto), randomUUID: undefined });
     const requests = gateway([answer("Your gateway is ready.")]);

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { BRAND_LOGO_PATH, BRAND_NAME, BRAND_SLOGAN } from "@/lib/brand";
+import { uiHref } from "@/utils/uiHref";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -15,9 +17,9 @@ import I18nProvider from "@/i18n/I18nProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "LiteLLM Dashboard",
-  description: "LiteLLM Proxy Admin UI",
-  icons: { icon: "/get_favicon" },
+  title: BRAND_NAME,
+  description: BRAND_SLOGAN,
+  icons: { icon: { url: uiHref(BRAND_LOGO_PATH), type: "image/svg+xml" } },
 };
 
 export default function RootLayout({
@@ -30,8 +32,8 @@ export default function RootLayout({
     // cannot predict; suppressHydrationWarning confines that mismatch to this element.
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <I18nProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <I18nProvider>
             <NuqsAdapter>
               <ReactQueryProvider>
                 <TerminologyProvider>
@@ -42,8 +44,8 @@ export default function RootLayout({
                 <Toaster />
               </ReactQueryProvider>
             </NuqsAdapter>
-          </ThemeProvider>
-        </I18nProvider>
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { TableCell, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 interface AlertingSetting {
   field_name: string;
@@ -56,7 +56,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
   const handleTextChange = (setting: AlertingSetting, event: React.ChangeEvent<HTMLInputElement>) => {
     form.setValue(setting.field_name, event.target.value);
-    handleInputChange(setting.field_name, event);
+    handleInputChange(setting.field_name, event.target.value);
   };
 
   const handleToggle = (setting: AlertingSetting, checked: boolean) => {
@@ -79,7 +79,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       return (
         <Switch
           aria-label={setting.field_name}
-          checked={setting.field_value}
+          checked={setting.field_value === true}
           onCheckedChange={(checked) => handleToggle(setting, checked)}
         />
       );
@@ -89,49 +89,53 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
   return (
     <form onSubmit={form.handleSubmit(onFinish)} noValidate>
-      {alertingSettings.map((value, index) => (
-        <TableRow key={index}>
-          <TableCell>
-            <p className="text-sm">{value.field_name}</p>
-            <p className="mt-1 text-[0.65rem] italic text-muted-foreground">{value.field_description}</p>
-          </TableCell>
-          {value.premium_field && !premiumUser ? (
-            <TableCell>
-              <Button className="flex items-center justify-center">
-                <a href="https://forms.gle/W3U4PZpJGFHWtHyA9" target="_blank">
-                  {t("loggingAndAlerts.alerting.enterpriseFeature")}
-                </a>
-              </Button>
-            </TableCell>
-          ) : (
-            <TableCell>{renderControl(value)}</TableCell>
-          )}
-          <TableCell>
-            {value.stored_in_db == true ? (
-              <Badge variant="secondary">
-                <CircleCheck />
-                {t("loggingAndAlerts.alerting.storage.inDb")}
-              </Badge>
-            ) : value.stored_in_db == false ? (
-              <Badge variant="outline">{t("loggingAndAlerts.alerting.storage.inConfig")}</Badge>
-            ) : (
-              <Badge variant="outline">{t("loggingAndAlerts.alerting.storage.notSet")}</Badge>
-            )}
-          </TableCell>
-          <TableCell>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label={t("loggingAndAlerts.alerting.resetField", { field: value.field_name })}
-              onClick={() => handleResetField(value.field_name, index)}
-              className="text-destructive"
-            >
-              <Trash2 className="size-5" />
-            </Button>
-          </TableCell>
-        </TableRow>
-      ))}
+      <Table>
+        <TableBody>
+          {alertingSettings.map((value, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <p className="text-sm">{value.field_name}</p>
+                <p className="mt-1 text-[0.65rem] italic text-muted-foreground">{value.field_description}</p>
+              </TableCell>
+              {value.premium_field && !premiumUser ? (
+                <TableCell>
+                  <Button className="flex items-center justify-center">
+                    <a href="https://forms.gle/W3U4PZpJGFHWtHyA9" target="_blank">
+                      {t("loggingAndAlerts.alerting.enterpriseFeature")}
+                    </a>
+                  </Button>
+                </TableCell>
+              ) : (
+                <TableCell>{renderControl(value)}</TableCell>
+              )}
+              <TableCell>
+                {value.stored_in_db == true ? (
+                  <Badge variant="secondary">
+                    <CircleCheck />
+                    {t("loggingAndAlerts.alerting.storage.inDb")}
+                  </Badge>
+                ) : value.stored_in_db == false ? (
+                  <Badge variant="outline">{t("loggingAndAlerts.alerting.storage.inConfig")}</Badge>
+                ) : (
+                  <Badge variant="outline">{t("loggingAndAlerts.alerting.storage.notSet")}</Badge>
+                )}
+              </TableCell>
+              <TableCell>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t("loggingAndAlerts.alerting.resetField", { field: value.field_name })}
+                  onClick={() => handleResetField(value.field_name, index)}
+                  className="text-destructive"
+                >
+                  <Trash2 className="size-5" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
       <div>
         <Button type="submit">{t("loggingAndAlerts.alerting.submit")}</Button>
       </div>

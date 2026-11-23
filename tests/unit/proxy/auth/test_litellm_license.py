@@ -13,14 +13,14 @@ from litellm.proxy.auth.litellm_license import LicenseCheck
 
 def test_read_public_key_loads_successfully():
     """Ensure public_key.pem is valid PEM with no leading whitespace."""
-    license_check = LicenseCheck()
+    license_check = LicenseCheck(enterprise_features=False)
     assert license_check.public_key is not None, (
         "public_key.pem could not be loaded — check for leading whitespace or malformed PEM header"
     )
 
 
 def test_is_over_limit():
-    license_check = LicenseCheck()
+    license_check = LicenseCheck(enterprise_features=False)
     license_check.airgapped_license_data = {"max_users": 100}
     assert license_check.is_over_limit(101) is True
     assert license_check.is_over_limit(100) is False
@@ -40,7 +40,7 @@ def test_is_over_limit():
 def test_auto_router_capability_limit() -> None:
     """The signed license's auto_router feature or its "*" wildcard lifts the one-router limit; an
     API-verified license (no airgapped data) and an airgapped license without either keep it."""
-    license_check = LicenseCheck()
+    license_check = LicenseCheck(enterprise_features=False)
     license_check.airgapped_license_data = {"expiration_date": "2999-01-01", "allowed_features": ["auto_router"]}
     assert license_check.auto_router_capability_limit() is None
 
@@ -92,7 +92,7 @@ def _signed_license(
 def test_expired_or_unreadable_license_grants_no_features() -> None:
     """The verifier stores the signed payload only after the expiry check passes and clears it when a
     later verify rejects the license, so a stale payload cannot keep lifting the heuristic_v2 limit."""
-    license_check = LicenseCheck()
+    license_check = LicenseCheck(enterprise_features=False)
     public_key, valid_key = _signed_license("2999-01-01")
     assert license_check.verify_license_without_api_request(public_key=public_key, license_key=valid_key) is True
     assert license_check.auto_router_capability_limit() is None
@@ -110,7 +110,7 @@ def test_expired_or_unreadable_license_grants_no_features() -> None:
 
 
 def test_valid_signed_license_with_auto_router_lifts_the_limit() -> None:
-    license_check = LicenseCheck()
+    license_check = LicenseCheck(enterprise_features=False)
     public_key, license_key = _signed_license("2999-01-01")
 
     assert license_check.verify_license_without_api_request(public_key=public_key, license_key=license_key) is True
@@ -120,7 +120,7 @@ def test_valid_signed_license_with_auto_router_lifts_the_limit() -> None:
 def test_valid_signed_wildcard_license_lifts_the_limit() -> None:
     """The license generator defaults allowed_features to ["*"], meaning every feature, so a wildcard
     license grants auto_router the same way a license that names it does."""
-    license_check = LicenseCheck()
+    license_check = LicenseCheck(enterprise_features=False)
     public_key, license_key = _signed_license("2999-01-01", allowed_features=("*",))
 
     assert license_check.verify_license_without_api_request(public_key=public_key, license_key=license_key) is True
@@ -153,7 +153,7 @@ def test_is_premium_follows_the_license_server_reply_for_an_unsigned_license(
         requested.append(str(request.url))
         return httpx.Response(200, json=reply)
 
-    license_check: Final = LicenseCheck()
+    license_check: Final = LicenseCheck(enterprise_features=False)
     license_check.http_handler = HTTPHandler(client=httpx.Client(transport=httpx.MockTransport(license_server)))
 
     assert license_check.is_premium() is premium
@@ -189,7 +189,7 @@ def test_license_success_logs_do_not_include_license(
     monkeypatch.delenv("LITELLM_LICENSE", raising=False)
     if configured_at_init:
         monkeypatch.setenv("LITELLM_LICENSE", license_value)
-    license_check: Final = LicenseCheck()
+    license_check: Final = LicenseCheck(enterprise_features=False)
     monkeypatch.setenv("LITELLM_LICENSE", license_value)
     with httpx.Client(
         transport=httpx.MockTransport(lambda request: httpx.Response(200, json={"verify": premium}))
@@ -207,7 +207,7 @@ def test_license_http_error_logs_preserve_status_without_license(
     status_code: int,
 ) -> None:
     license_value: Final = "test-only-private-license-marker"
-    license_check: Final = LicenseCheck()
+    license_check: Final = LicenseCheck(enterprise_features=False)
     with httpx.Client(
         transport=httpx.MockTransport(lambda request: httpx.Response(status_code, text=license_value))
     ) as client:
@@ -223,7 +223,7 @@ def test_license_exception_logs_omit_secret_message_and_traceback(
     error_class: type[Exception],
 ) -> None:
     license_value: Final = "test-only-private-license-marker"
-    license_check: Final = LicenseCheck()
+    license_check: Final = LicenseCheck(enterprise_features=False)
 
     def fail(request: httpx.Request) -> httpx.Response:
         try:
@@ -242,7 +242,7 @@ def test_license_malformed_response_does_not_log_echoed_license(
     license_logs: pytest.LogCaptureFixture,
 ) -> None:
     license_value: Final = "test-only-private-license-marker"
-    license_check: Final = LicenseCheck()
+    license_check: Final = LicenseCheck(enterprise_features=False)
     with httpx.Client(
         transport=httpx.MockTransport(lambda request: httpx.Response(200, json={"verify": license_value}))
     ) as client:
@@ -258,7 +258,7 @@ def test_local_license_logs_omit_signed_payload_and_validation_errors(
 ) -> None:
     payload_marker: Final = "test-only-private-payload-marker"
     public_key, license_value = _signed_license(expiration_date, allowed_features=(payload_marker,))
-    license_check: Final = LicenseCheck()
+    license_check: Final = LicenseCheck(enterprise_features=False)
     result: Final = license_check.verify_license_without_api_request(public_key, license_value)
     assert (result is True) is (expiration_date == "2999-01-01")
     _assert_no_license_in_logs(license_logs, license_value)
@@ -272,7 +272,26 @@ def test_local_license_exception_does_not_log_license(
     _public_key, license_value = _signed_license("2999-01-01")
     failing_public_key: Final = MagicMock()
     failing_public_key.verify.side_effect = ValueError(license_value)
-    license_check: Final = LicenseCheck()
+    license_check: Final = LicenseCheck(enterprise_features=False)
     assert license_check.verify_license_without_api_request(failing_public_key, license_value) is False
     assert "error_type=ValueError" in license_logs.text
     _assert_no_license_in_logs(license_logs, license_value)
+
+
+@pytest.mark.parametrize("license_value", [None, "invalid-license"])
+def test_branch_edition_enables_features_without_a_license(
+    monkeypatch: pytest.MonkeyPatch, license_value: str | None
+) -> None:
+    if license_value is None:
+        monkeypatch.delenv("LITELLM_LICENSE", raising=False)
+    else:
+        monkeypatch.setenv("LITELLM_LICENSE", license_value)
+    license_check: Final = LicenseCheck()
+    license_check.airgapped_license_data = {"max_users": 1, "max_teams": 1, "allowed_features": []}
+
+    assert license_check.is_premium() is True
+    assert license_check.grants_feature("sso") is True
+    assert license_check.auto_router_capability_limit() is None
+    assert license_check.user_seat_limit() is None
+    assert license_check.is_over_limit(2) is False
+    assert license_check.is_team_count_over_limit(2) is False

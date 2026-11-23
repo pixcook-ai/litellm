@@ -116,6 +116,7 @@ export function LiteAdminFrame({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (sessionKey === null) return;
     const onKeyDown = (event: KeyboardEvent) => {
+      if (typeof event.key !== "string") return;
       if (event.key.toLowerCase() !== "j" || !(event.metaKey || event.ctrlKey) || event.shiftKey || event.altKey)
         return;
       event.preventDefault();

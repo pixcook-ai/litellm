@@ -1,8 +1,10 @@
+import { BRAND_NAME } from "@/lib/brand";
+
 export const productNames = {
-  liteLLM: "LiteLLM",
-  liteLLMWithLogo: "🚅 LiteLLM",
-  liteLLMProxy: "LiteLLM Proxy",
-  liteLLMMcpOAuth: "LiteLLM MCP OAuth",
+  liteLLM: BRAND_NAME,
+  liteLLMWithLogo: BRAND_NAME,
+  liteLLMProxy: `${BRAND_NAME} Proxy`,
+  liteLLMMcpOAuth: `${BRAND_NAME} MCP OAuth`,
   moyai: "Moyai",
   moyaiRepository: "github.com/BerriAI/moyai",
   switchyard: "Switchyard",

@@ -483,7 +483,7 @@ const MCPServers: React.FC<MCPServerProps> = ({ accessToken, userRole, userID, i
 
   return (
     <TooltipProvider>
-      <div className="h-full w-full p-6">
+      <div data-page-layout="" className="h-full w-full p-6">
         <DeleteServerDialog
           open={isDeleteModalOpen}
           onOpenChange={(open) => !open && cancelDelete()}

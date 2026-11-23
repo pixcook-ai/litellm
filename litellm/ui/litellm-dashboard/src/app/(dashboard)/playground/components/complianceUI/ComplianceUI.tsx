@@ -1091,43 +1091,43 @@ export default function ComplianceUI({
                   );
                   return (
                     <div key={fw.name} className="rounded-lg overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => toggleFramework(fw.name)}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 text-left bg-muted hover:bg-accent transition-colors rounded-lg border border-border"
-                      >
-                        {isExpanded ? (
-                          <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                        )}
-                        <CategoryIcon iconKey={fw.icon} className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <span className="text-xs font-semibold text-foreground">
-                            {labelFor(FRAMEWORK_LABEL_KEYS, fw.name, t)}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground ml-1.5">
-                            {t("playground.compliance.library.promptCount", { total: fwPromptCount })}
-                          </span>
-                        </div>
-                        {fwSelectedCount > 0 && (
-                          <span className="text-[10px] font-medium bg-info/15 text-info px-1.5 py-0.5 rounded-full">
-                            {fwSelectedCount}
-                          </span>
-                        )}
+                      <div className="flex items-center gap-2 px-3 bg-muted rounded-lg border border-border">
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFrameworkPrompts(fw);
-                          }}
+                          onClick={() => toggleFramework(fw.name)}
+                          aria-expanded={isExpanded}
+                          className="flex flex-1 min-w-0 items-center gap-2 py-2.5 text-left hover:bg-accent transition-colors rounded-lg"
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                          )}
+                          <CategoryIcon iconKey={fw.icon} className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-semibold text-foreground">
+                              {labelFor(FRAMEWORK_LABEL_KEYS, fw.name, t)}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground ml-1.5">
+                              {t("playground.compliance.library.promptCount", { total: fwPromptCount })}
+                            </span>
+                          </div>
+                          {fwSelectedCount > 0 && (
+                            <span className="text-[10px] font-medium bg-info/15 text-info px-1.5 py-0.5 rounded-full">
+                              {fwSelectedCount}
+                            </span>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleFrameworkPrompts(fw)}
                           className="text-[10px] font-medium text-info px-1.5 py-0.5 rounded-sm hover:bg-info/10 shrink-0"
                         >
                           {fwSelectedCount === fwPromptCount
                             ? t("playground.compliance.library.clearFramework")
                             : t("playground.compliance.library.selectFramework")}
                         </button>
-                      </button>
+                      </div>
 
                       {isExpanded && (
                         <div className="ml-3 mt-1 space-y-0.5 border-l-2 border-border pl-3">

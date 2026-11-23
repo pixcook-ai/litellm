@@ -31,6 +31,7 @@ import { z } from "zod";
 import { useWorker } from "@/hooks/useWorker";
 import i18n from "@/i18n/i18n";
 import { uiHref } from "@/utils/uiHref";
+import { BRAND_DOMAIN, BRAND_LOGO_PATH, BRAND_NAME, BRAND_SLOGAN } from "@/lib/brand";
 import { productNames } from "@/i18n/untranslated/productNames";
 
 const loginSchema = z.object({
@@ -44,12 +45,12 @@ function LoginLogo() {
   return (
     <div className="flex justify-center">
       <img
-        src={uiHref("assets/logos/litellm_logo.png")}
+        src={uiHref(BRAND_LOGO_PATH)}
         alt={productNames.liteLLM}
         className="h-10 w-auto dark:hidden"
       />
       <img
-        src={uiHref("assets/logos/litellm_logo_dark.png")}
+        src={uiHref(BRAND_LOGO_PATH)}
         alt={productNames.liteLLM}
         className="hidden h-10 w-auto dark:block"
       />
@@ -245,8 +246,9 @@ function LoginPageContent() {
               <LoginLogo />
 
               <div className="text-center">
-                <h3 className="text-2xl font-semibold text-foreground">{t("login.form.title")}</h3>
-                <p className="text-sm text-muted-foreground">{t("login.form.subtitle")}</p>
+                <h3 className="text-2xl font-semibold text-foreground">{BRAND_NAME}</h3>
+                <p className="text-sm text-muted-foreground">{BRAND_SLOGAN}</p>
+                <p className="text-xs text-muted-foreground">{BRAND_DOMAIN}</p>
               </div>
 
               {!uiConfig?.hide_default_credentials_hint && (

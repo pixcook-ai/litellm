@@ -20,7 +20,7 @@ export default function UsagePage() {
   const [params] = useQueryStates(usageUrlParsers);
   if (settingsLoading && !dateRangeFromParams(params)) {
     return (
-      <div role="status" aria-label={t("usage.page.loadingSettings")} className="p-6">
+      <div data-page-layout="" role="status" aria-label={t("usage.page.loadingSettings")} className="p-6">
         <Skeleton className="h-64 w-full" />
       </div>
     );

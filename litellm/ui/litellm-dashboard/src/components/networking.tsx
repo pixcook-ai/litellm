@@ -3159,7 +3159,11 @@ export const getPassThroughEndpointsCall = async (accessToken: string, teamId?: 
   }
 };
 
-export const getConfigFieldSetting = async (accessToken: string, fieldName: string) => {
+export const getConfigFieldSetting = async (
+  accessToken: string,
+  fieldName: string,
+  options?: { defaultValue: boolean },
+) => {
   try {
     let url = proxyBaseUrl
       ? `${proxyBaseUrl}/config/field/info?field_name=${fieldName}`
@@ -3176,6 +3180,9 @@ export const getConfigFieldSetting = async (accessToken: string, fieldName: stri
     if (!response.ok) {
       const errorData = await response.json();
       const errorMessage = deriveErrorMessage(errorData);
+      if (response.status === 400 && options !== undefined && errorMessage === `Field name=${fieldName} is not set`) {
+        return { field_name: fieldName, field_value: options.defaultValue };
+      }
       handleError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -3184,7 +3191,7 @@ export const getConfigFieldSetting = async (accessToken: string, fieldName: stri
     return data;
     // Handle success - you might want to update some state or UI based on the created key
   } catch (error) {
-    console.error("Failed to set callbacks:", error);
+    console.error("Failed to get config field:", error);
     throw error;
   }
 };

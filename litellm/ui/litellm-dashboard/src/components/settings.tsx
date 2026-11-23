@@ -403,11 +403,9 @@ const Settings: React.FC<SettingsPageProps> = ({ accessToken, userRole, userID, 
   }, [showEditCallback, selectedEditCallback, editForm, callbackConfigs]);
 
   const handleSwitchChange = (alertName: string) => {
-    if (activeAlerts.includes(alertName)) {
-      setActiveAlerts(activeAlerts.filter((alert) => alert !== alertName));
-    } else {
-      setActiveAlerts([...activeAlerts, alertName]);
-    }
+    setActiveAlerts((current) =>
+      current.includes(alertName) ? current.filter((alert) => alert !== alertName) : [...current, alertName],
+    );
   };
   const alerts_to_UI_NAME: Record<string, ParseKeys> = {
     llm_exceptions: "loggingAndAlerts.alertTypes.labels.llmExceptions",
@@ -435,20 +433,12 @@ const Settings: React.FC<SettingsPageProps> = ({ accessToken, userRole, userID, 
         setCallbacks(data.callbacks);
         setAllCallbacks(data.available_callbacks);
 
-        let alerts_data = data.alerts;
-        if (alerts_data) {
-          if (alerts_data.length > 0) {
-            let _alert_info = alerts_data[0];
-            let catch_all_webhook = _alert_info.variables.SLACK_WEBHOOK_URL;
-
-            let active_alerts = _alert_info.active_alerts;
-            setActiveAlerts(active_alerts);
-            setCatchAllWebhookURL(catch_all_webhook);
-            setAlertToWebhooks(_alert_info.alerts_to_webhook);
-          }
-        }
-
-        setAlerts(alerts_data);
+        const alertsData = data.alerts ?? [];
+        const alertInfo = alertsData[0];
+        setActiveAlerts(alertInfo?.active_alerts ?? []);
+        setCatchAllWebhookURL(alertInfo?.variables?.SLACK_WEBHOOK_URL ?? "");
+        setAlertToWebhooks(alertInfo?.alerts_to_webhook ?? {});
+        setAlerts(alertsData);
       } finally {
         setIsLoadingCallbacks(false);
       }
@@ -457,7 +447,7 @@ const Settings: React.FC<SettingsPageProps> = ({ accessToken, userRole, userID, 
   }, [accessToken, userRole, userID]);
 
   const isAlertOn = (alertName: string) => {
-    return activeAlerts && activeAlerts.includes(alertName);
+    return activeAlerts.includes(alertName);
   };
 
   // Shared handler for callback form submission
@@ -552,12 +542,9 @@ const Settings: React.FC<SettingsPageProps> = ({ accessToken, userRole, userID, 
       return;
     }
 
-    const updatedAlertToWebhooks: Record<string, string> = {};
-    Object.entries(alerts_to_UI_NAME).forEach(([key, value]) => {
-      const webhookInput = document.querySelector(`input[name="${key}"]`) as HTMLInputElement;
-      const newWebhookValue = webhookInput?.value || "";
-      updatedAlertToWebhooks[key] = newWebhookValue;
-    });
+    const updatedAlertToWebhooks = Object.fromEntries(
+      Object.keys(alerts_to_UI_NAME).map((key) => [key, alertToWebhooks[key] ?? catchAllWebhookURL]),
+    );
 
     const payload = {
       general_settings: {
@@ -610,8 +597,8 @@ const Settings: React.FC<SettingsPageProps> = ({ accessToken, userRole, userID, 
   }
 
   return (
-    <div className="mx-4">
-      <div className="grid grid-cols-1 gap-2 p-8 w-full mt-2">
+    <div data-page-layout="" className="mx-4">
+      <div data-page-layout="" className="grid grid-cols-1 gap-2 p-8 w-full mt-2">
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as SettingsTab)}>
           <TabsList variant="line">
             <TabsTrigger value="logging-callbacks">{t("loggingAndAlerts.page.tabs.loggingCallbacks")}</TabsTrigger>
@@ -675,8 +662,9 @@ const Settings: React.FC<SettingsPageProps> = ({ accessToken, userRole, userID, 
                         {key == "region_outage_alerts" ? (
                           premiumUser ? (
                             <Switch
-                              id="switch"
-                              name="switch"
+                              id={`alert-${key}`}
+                              name={`alert-${key}`}
+                              aria-label={t(value)}
                               checked={isAlertOn(key)}
                               onCheckedChange={() => handleSwitchChange(key)}
                             />
@@ -689,25 +677,27 @@ const Settings: React.FC<SettingsPageProps> = ({ accessToken, userRole, userID, 
                           )
                         ) : (
                           <Switch
-                            id="switch"
-                            name="switch"
+                            id={`alert-${key}`}
+                            name={`alert-${key}`}
+                            aria-label={t(value)}
                             checked={isAlertOn(key)}
                             onCheckedChange={() => handleSwitchChange(key)}
                           />
                         )}
                       </TableCell>
                       <TableCell className="whitespace-normal break-words">
-                        <p>{t(value)}</p>
+                        <p id={`alert-label-${key}`}>{t(value)}</p>
                       </TableCell>
                       <TableCell>
                         <Input
                           name={key}
                           type="password"
-                          defaultValue={
-                            alertToWebhooks && alertToWebhooks[key]
-                              ? alertToWebhooks[key]
-                              : (catchAllWebhookURL as string)
-                          }
+                          aria-labelledby={`alert-label-${key}`}
+                          value={alertToWebhooks[key] ?? catchAllWebhookURL}
+                          onChange={(event) => {
+                            const nextValue = event.target.value;
+                            setAlertToWebhooks((current) => ({ ...current, [key]: nextValue }));
+                          }}
                         />
                       </TableCell>
                     </TableRow>

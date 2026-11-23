@@ -457,7 +457,7 @@ const UsagePage: React.FC<UsagePageProps> = ({ teams, organizations, teamsLoadin
   );
 
   return (
-    <div ref={pageRef} className="relative w-full px-4 pt-3 pb-8 sm:px-6">
+    <div ref={pageRef} data-page-layout="" className="relative w-full px-4 pt-3 pb-8 sm:px-6">
       <header className="mb-3 flex w-full flex-wrap items-center justify-between gap-3 border-b pb-3">
         <UsageViewSelect
           value={usageView}

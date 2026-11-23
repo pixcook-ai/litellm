@@ -430,7 +430,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ proxySettings }) => {
   ];
 
   return (
-    <div className="w-full m-2 mt-2 p-8">
+    <div data-page-layout="" className="w-full m-2 mt-2 p-8">
       <h2 className="mb-2 text-base font-semibold text-foreground">{t("adminPanel.page.title")}</h2>
       <p className="mb-4 text-sm text-foreground">{t("adminPanel.page.subtitle")}</p>
       <Tabs defaultValue={tabItems[0].key}>

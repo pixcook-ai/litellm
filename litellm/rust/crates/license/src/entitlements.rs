@@ -4,6 +4,7 @@ use crate::{Feature, License};
 /// server vouched for, which carries no claims.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Entitlements {
+    BranchEdition,
     Community,
     Signed(License),
     ServerVerified,
@@ -18,13 +19,15 @@ impl Entitlements {
     pub fn license(&self) -> Option<&License> {
         match self {
             Self::Signed(license) => Some(license),
-            Self::ServerVerified | Self::Community => None,
+            Self::BranchEdition | Self::ServerVerified | Self::Community => None,
         }
     }
 
     pub fn grants(&self, feature: Feature) -> bool {
-        self.license()
-            .is_some_and(|license| license.grants(feature))
+        matches!(self, Self::BranchEdition)
+            || self
+                .license()
+                .is_some_and(|license| license.grants(feature))
     }
 
     pub fn max_users(&self) -> Option<i64> {
@@ -61,6 +64,7 @@ mod tests {
 
     #[rstest]
     #[case::community(Entitlements::Community, false)]
+    #[case::branch(Entitlements::BranchEdition, true)]
     #[case::server_verified(Entitlements::ServerVerified, true)]
     #[case::signed(signed(), true)]
     fn any_verified_license_is_enterprise(
@@ -72,6 +76,7 @@ mod tests {
 
     #[rstest]
     #[case::community(Entitlements::Community, false)]
+    #[case::branch(Entitlements::BranchEdition, true)]
     #[case::server_verified(Entitlements::ServerVerified, false)]
     #[case::signed(signed(), true)]
     fn only_signed_claims_grant_features(
@@ -83,6 +88,7 @@ mod tests {
 
     #[rstest]
     #[case::community(Entitlements::Community, None, false, false)]
+    #[case::branch(Entitlements::BranchEdition, None, false, false)]
     #[case::server_verified(Entitlements::ServerVerified, None, false, false)]
     #[case::signed(signed(), Some(10), true, true)]
     fn limits_come_from_signed_claims(

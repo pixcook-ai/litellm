@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "@/lib/brand";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -112,7 +113,7 @@ describe("LoginPage", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Login" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: BRAND_NAME })).toBeInTheDocument();
     });
   });
 
@@ -199,7 +200,7 @@ describe("LoginPage", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Login" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: BRAND_NAME })).toBeInTheDocument();
     });
 
     expect(mockPush).not.toHaveBeenCalled();
@@ -283,7 +284,7 @@ describe("LoginPage", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Login" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: BRAND_NAME })).toBeInTheDocument();
     });
 
     expect(screen.getByRole("button", { name: "Login with SSO" })).toBeInTheDocument();
@@ -315,7 +316,7 @@ describe("LoginPage", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Login" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: BRAND_NAME })).toBeInTheDocument();
     });
 
     const ssoButton = screen.getByRole("button", { name: "Login with SSO" });
@@ -352,7 +353,7 @@ describe("LoginPage", () => {
       if (returnUrl) document.cookie = `litellm_return_url=${encodeURIComponent(returnUrl)}; Path=/`;
       mockMutate.mockImplementation((_input, options) => options.onSuccess({ redirect_url: "/ui/?login=success" }));
       renderLogin();
-      await screen.findByRole("heading", { name: "Login" });
+      await screen.findByRole("heading", { name: BRAND_NAME });
       fireEvent.change(screen.getByLabelText("Username"), { target: { value: "admin" } });
       fireEvent.change(screen.getByLabelText("Password"), { target: { value: "test-password" } });
       fireEvent.click(screen.getByRole("button", { name: "Login", exact: true }));
@@ -378,7 +379,7 @@ describe("LoginPage", () => {
       async (redirectUrl) => {
         mockMutate.mockImplementation((_input, options) => options.onSuccess({ redirect_url: redirectUrl }));
         renderLogin();
-        await screen.findByRole("heading", { name: "Login" });
+        await screen.findByRole("heading", { name: BRAND_NAME });
         fireEvent.change(screen.getByLabelText("Username"), { target: { value: "admin" } });
         fireEvent.change(screen.getByLabelText("Password"), { target: { value: "test-password" } });
         fireEvent.click(screen.getByRole("button", { name: "Login", exact: true }));
@@ -458,7 +459,7 @@ describe("LoginPage", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole("heading", { name: "Login" })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: BRAND_NAME })).toBeInTheDocument();
       });
 
       expect(document.cookie).not.toContain("token=attacker.jwt.value");

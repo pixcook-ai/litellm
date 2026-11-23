@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "@/lib/brand";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -97,7 +98,7 @@ describe("LoginPage submit payload", () => {
   it("sends exactly {username, password, useV3:false} when the Login button is clicked", async () => {
     const user = userEvent.setup();
     renderLoginPage();
-    await screen.findByRole("heading", { name: "Login" });
+    await screen.findByRole("heading", { name: BRAND_NAME });
 
     fireEvent.change(screen.getByLabelText("Username"), { target: { value: "admin" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "sk-9876" } });
@@ -111,7 +112,7 @@ describe("LoginPage submit payload", () => {
   it("submits on Enter from the password field", async () => {
     const user = userEvent.setup();
     renderLoginPage();
-    await screen.findByRole("heading", { name: "Login" });
+    await screen.findByRole("heading", { name: BRAND_NAME });
 
     fireEvent.change(screen.getByLabelText("Username"), { target: { value: "admin" } });
     await user.type(screen.getByLabelText("Password"), "sk-9876{Enter}");
@@ -123,7 +124,7 @@ describe("LoginPage submit payload", () => {
   it("blocks submit and shows both required messages when the fields are empty", async () => {
     const user = userEvent.setup();
     renderLoginPage();
-    await screen.findByRole("heading", { name: "Login" });
+    await screen.findByRole("heading", { name: BRAND_NAME });
 
     await user.click(screen.getByRole("button", { name: "Login" }));
 
@@ -150,7 +151,7 @@ describe("LoginPage submit payload", () => {
     });
 
     renderLoginPage();
-    await screen.findByRole("heading", { name: "Login" });
+    await screen.findByRole("heading", { name: BRAND_NAME });
 
     await user.click(screen.getAllByRole("combobox")[0]);
     await user.click(await screen.findByText("Worker B"));
@@ -179,7 +180,7 @@ describe("LoginPage submit payload", () => {
     });
 
     renderLoginPage();
-    await screen.findByRole("heading", { name: "Login" });
+    await screen.findByRole("heading", { name: BRAND_NAME });
 
     fireEvent.change(screen.getByLabelText("Username"), { target: { value: "admin" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "sk-9876" } });

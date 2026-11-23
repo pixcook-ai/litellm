@@ -7,7 +7,8 @@ import { TerminologyProvider } from "@/contexts/TerminologyContext";
 import { PluginModeProvider } from "@/contexts/PluginModeContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useCloseMobileSidebarOn } from "@/components/shared/MobileSidebar";
-import { BRAND_NAME } from "@/lib/brand";
+import { BRAND_LOGO_PATH, BRAND_NAME } from "@/lib/brand";
+import { uiHref } from "@/utils/uiHref";
 import LeftNav, { menuGroups, getBreadcrumb } from "./LeftNav";
 
 const Sidebar = ({ collapsed = false, ...props }: ComponentProps<typeof LeftNav> & { collapsed?: boolean }) => (
@@ -249,6 +250,16 @@ describe("Sidebar (leftnav)", () => {
 
     expect(light).toHaveAttribute("src", expect.stringMatching(/\/get_image\?variant=monogram$/));
     expect(dark).toHaveAttribute("src", expect.stringMatching(/\/get_image\?theme=dark&variant=monogram$/));
+  });
+
+  it("uses the bundled brand monogram when the configured logo is the default brand asset", () => {
+    mockUseThemeImpl = () => ({ ...unbrandedTheme(), logoUrl: uiHref(BRAND_LOGO_PATH) });
+    renderWithProviders(<Sidebar collapsed />);
+
+    const { light, dark } = collapsedLogos();
+
+    expect(light).toHaveAttribute("src", uiHref("assets/logos/huiyizhuo-monogram.svg"));
+    expect(dark).toHaveAttribute("src", uiHref("assets/logos/huiyizhuo-monogram.svg"));
   });
 
   it("keeps a configured custom logo when collapsed instead of the LiteLLM monogram", () => {

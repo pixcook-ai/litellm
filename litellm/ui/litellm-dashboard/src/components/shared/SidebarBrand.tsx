@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { uiHref } from "@/utils/uiHref";
 import { cn } from "@/lib/cva.config";
+import { BRAND_LOGO_COMPACT_PATH, BRAND_LOGO_PATH } from "@/lib/brand";
 import { productNames } from "@/i18n/untranslated/productNames";
 
 const LOGO_CLASS_NAME =
@@ -39,9 +40,15 @@ export function SidebarBrand({
   const { data: healthData } = useHealthReadinessDetails(accessToken);
   const version = healthData?.litellm_version;
   const baseUrl = getProxyBaseUrl();
-  const logoSrc = logoUrl || bundledLogoSrc(baseUrl, { dark: false, monogram: collapsed });
+  const bundledBrandLogo = uiHref(collapsed ? BRAND_LOGO_COMPACT_PATH : BRAND_LOGO_PATH);
+  const usesBundledBrandLogo = logoUrl === uiHref(BRAND_LOGO_PATH);
+  const logoSrc = usesBundledBrandLogo
+    ? bundledBrandLogo
+    : logoUrl || bundledLogoSrc(baseUrl, { dark: false, monogram: collapsed });
   const reachableDarkLogo = logoUrlDark === erroredDarkLogo ? null : logoUrlDark;
-  const darkLogoSrc = reachableDarkLogo || logoUrl || bundledLogoSrc(baseUrl, { dark: true, monogram: collapsed });
+  const darkLogoSrc = usesBundledBrandLogo
+    ? bundledBrandLogo
+    : reachableDarkLogo || logoUrl || bundledLogoSrc(baseUrl, { dark: true, monogram: collapsed });
   return (
     <SidebarHeader className="h-14 flex-none border-b border-border p-3 group-data-[collapsible=icon]:h-auto group-data-[collapsible=icon]:py-2">
       <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1">

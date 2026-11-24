@@ -113,8 +113,10 @@ describe("Chat layout product navigation", () => {
       const logo = await screen.findByRole("link", { name: "Chat home" });
       const light = within(logo).getByAltText(BRAND_NAME);
       const dark = within(logo).getByAltText("");
-      const source = (path: string) =>
-        path === BRAND_LOGO_PATH ? uiHref(path) : path.startsWith("/") ? `${getProxyBaseUrl()}${path}` : path;
+      const source = (path: string) => {
+        if (path === BRAND_LOGO_PATH) return uiHref(path);
+        return path.startsWith("/") ? `${getProxyBaseUrl()}${path}` : path;
+      };
       expect(light).toHaveAttribute("src", source(lightSource));
       await waitFor(() => expect(dark).toHaveAttribute("src", source(darkSource)));
       expect(light).toHaveClass("dark:hidden");

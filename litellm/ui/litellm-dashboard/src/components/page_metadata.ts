@@ -8,7 +8,7 @@ import type { ParseKeys } from "i18next";
 // Page descriptions for UI Settings configuration
 export const pageDescriptions: Record<string, ParseKeys> = {
   home: "shell.pageDescriptions.home",
-  suppliers: "suppliers.description",
+  suppliers: "suppliers.landingDescription",
   "api-keys": "shell.pageDescriptions.apiKeys",
   "llm-playground": "shell.pageDescriptions.llmPlayground",
   models: "shell.pageDescriptions.models",

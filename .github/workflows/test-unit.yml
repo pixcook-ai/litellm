@@ -1434,7 +1434,7 @@ jobs:
       contents: read
       pull-requests: read
     runs-on: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
-    timeout-minutes: 20
+    timeout-minutes: ${{ github.repository == 'BerriAI/litellm' && 20 || 40 }}
     defaults:
       run:
         working-directory: litellm/ui/litellm-dashboard
@@ -1478,12 +1478,13 @@ jobs:
         if: steps.changes.outputs.decision != 'skip'
         env:
           CI: "true"
+          UI_TEST_WORKERS: ${{ github.repository == 'BerriAI/litellm' && 14 || 2 }}
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           EVENT_BASE_REF: ${{ github.event.pull_request.base.ref }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          full_suite() { npm run test -- --run --pool forks --maxWorkers=14; }
+          full_suite() { npm run test -- --run --pool forks --maxWorkers="$UI_TEST_WORKERS"; }
 
           if [ -z "$PR_NUMBER" ]; then
             echo "Push to $GITHUB_REF_NAME: running the full suite"
@@ -1513,7 +1514,7 @@ jobs:
 
           echo "Pull request: running tests related to ${#changed_files[@]} changed UI files"
           npm run test -- related "${changed_files[@]}" --run --passWithNoTests \
-            --pool forks --maxWorkers=14
+            --pool forks --maxWorkers="$UI_TEST_WORKERS"
   docs:
     name: docs
     needs: plan

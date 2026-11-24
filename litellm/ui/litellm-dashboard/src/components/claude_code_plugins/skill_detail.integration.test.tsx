@@ -84,6 +84,16 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+async function readDownload(blob: Blob): Promise<string> {
+  if (typeof blob.text === "function") return blob.text();
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(blob);
+  });
+}
+
 it("downloads the backend CSV in one authenticated request without changing the table", async () => {
   setGlobalLitellmHeaderName("X-LiteLLM-Key");
   renderHub();
@@ -108,7 +118,7 @@ it("downloads the backend CSV in one authenticated request without changing the 
   const [blob, filename] = vi.mocked(downloadBlob).mock.calls[0];
   expect(filename).toBe("my-skill.csv");
   expect(blob.type).toBe("text/csv;charset=utf-8");
-  expect(await new Response(blob).text()).toBe(csv);
+  expect(await readDownload(blob)).toBe(csv);
   expect(screen.queryByRole("cell", { name: "second@example.test" })).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Load more" })).toBeEnabled();
 });
@@ -162,7 +172,7 @@ it.each(["legacy", "portable"])(
     const [blob, filename] = vi.mocked(downloadBlob).mock.calls[0];
     expect(filename).toBe("my-skill.zip");
     expect(blob.type).toBe("application/zip");
-    expect(await new Response(blob).text()).toBe("zip-bytes");
+    expect(await readDownload(blob)).toBe("zip-bytes");
     expect(skillRequestMock).toHaveBeenLastCalledWith(
       expectedUrl,
       expect.objectContaining({

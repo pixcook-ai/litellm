@@ -220,6 +220,20 @@ describe("Sidebar (leftnav)", () => {
     expect(screen.queryByRole("link", { name: "End users" })).not.toBeInTheDocument();
   });
 
+  it.each(["/ui/app-groups/", "/app-groups"])("opens app groups in Customer Management at %s", (pathname) => {
+    localStorage.setItem("litellm_plugin_mode", "customer-portal");
+    navState.pathname = pathname;
+    renderWithProviders(
+      <PluginModeProvider>
+        <Sidebar {...defaultProps} />
+      </PluginModeProvider>,
+    );
+    expect(screen.getByRole("link", { name: "App groups" })).toHaveAttribute("href", "/ui/app-groups");
+    expect(screen.getByRole("link", { name: "App groups" })).toHaveAttribute("data-active");
+    expect(screen.getByRole("link", { name: "Applications" })).not.toHaveAttribute("data-active", "true");
+    expect(getBreadcrumb(pathname)).toEqual({ section: "Customer Management", title: "App groups" });
+  });
+
   it("pairs the logo with a dark-mode variant that swaps on the dark class", () => {
     renderWithProviders(<Sidebar {...defaultProps} />);
 
@@ -323,7 +337,7 @@ describe("Sidebar (leftnav)", () => {
       "Home",
       "Virtual Keys",
       "Playground",
-      "Models + Endpoints",
+      "Model Management",
       "Agentic",
       "MCP Servers",
       "Guardrails",
@@ -414,7 +428,8 @@ describe("Sidebar (leftnav)", () => {
         </PluginModeProvider>,
       );
       expect(screen.queryByRole("link", { name: "Customer organizations" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: "Apps" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: "Applications" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: "App groups" })).not.toBeInTheDocument();
       expect(screen.queryByRole("link", { name: "Settings" })).not.toBeInTheDocument();
     });
 
@@ -424,10 +439,10 @@ describe("Sidebar (leftnav)", () => {
       expect(screen.queryByText("Playground")).not.toBeInTheDocument();
     });
 
-    it("shows Models + Endpoints to Admin Viewer (read-only)", () => {
+    it("shows Model Management to Admin Viewer (read-only)", () => {
       mockUseAuthorized.mockReturnValue(adminViewerAuth);
       renderWithProviders(<Sidebar {...defaultProps} />);
-      expect(screen.getByText("Models + Endpoints")).toBeInTheDocument();
+      expect(screen.getByText("Model Management")).toBeInTheDocument();
     });
 
     it("shows Agents (under Agentic) to Admin Viewer (read-only)", async () => {
@@ -807,7 +822,7 @@ describe("Sidebar (leftnav)", () => {
       expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", href);
     expectHref("Virtual Keys", "/ui/api-keys");
     expectHref("Playground", "/ui/playground");
-    expectHref("Models + Endpoints", "/ui/models-and-endpoints");
+    expectHref("Model Management", "/ui/models-and-endpoints");
     expectHref("Usage", "/ui/usage");
     expectHref("Alerts", "/ui/alerts");
   });
@@ -902,7 +917,7 @@ describe("getBreadcrumb", () => {
   });
 
   it("resolves routes whose segment differs from the sidebar page id", () => {
-    expect(getBreadcrumb("/ui/models-and-endpoints")).toEqual({ section: "AI Gateway", title: "Models + Endpoints" });
+    expect(getBreadcrumb("/ui/models-and-endpoints")).toEqual({ section: "AI Gateway", title: "Model Management" });
     expect(getBreadcrumb("/ui/usage")).toEqual({ section: "Observability", title: "Usage" });
   });
 

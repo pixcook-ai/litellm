@@ -7810,6 +7810,7 @@ def test_spend_logs_payload(model_id: str | None):
     assert len(payload["request_id"]) > 0
     expected_metadata_keys: Final = SpendLogsMetadata.__annotations__.keys() - {
         "is_silent_experiment",
+        "supplier_usage",
         "upstream_provider",
         "route_call_type",
         "user_api_key_customer_org_id",

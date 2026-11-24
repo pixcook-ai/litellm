@@ -1093,7 +1093,7 @@ async def test_new_user_license_gate_counts_only_billable_users(mocker):
         _noop,
     )
 
-    license_check = LicenseCheck()
+    license_check = LicenseCheck(enterprise_features=False)
     license_check.airgapped_license_data = {"max_users": 2}  # type: ignore
     mocker.patch("litellm.proxy.proxy_server._license_check", license_check)
 

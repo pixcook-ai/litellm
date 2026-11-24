@@ -5977,7 +5977,7 @@ def completion(
             **kwargs,
         )
     api_base = kwargs.get("api_base", None)
-    mock_response: Final[MOCK_RESPONSE_TYPE | None] = kwargs.get("mock_response", None)
+    mock_response: Final = kwargs.get("mock_response", None)
     mock_tool_calls: Final = kwargs.get("mock_tool_calls", None)
     mock_timeout: Final = cast(bool | None, kwargs.get("mock_timeout", None))
     force_timeout: Final = kwargs.get("force_timeout", 600)  ## deprecated
@@ -6004,7 +6004,7 @@ def completion(
     assistant_continue_message: Final = cast(  # cast-ok: read from untyped kwargs
         ChatCompletionAssistantMessage | None, kwargs.get("assistant_continue_message", None)
     )
-    headers = {} if headers is None else dict(headers)
+    headers = {} if headers is None else dict(_REQUEST_KWARGS_ADAPTER.validate_python(headers))
     if extra_headers is not None:
         headers.update(extra_headers)
     # Inject proxy auth headers if configured
@@ -6323,7 +6323,7 @@ def completion(
         bridges_to_responses_api: Final = (
             responses_api_model_info.get("mode") == "responses" and may_bridge_to_responses_api
         )
-        allowed_openai_params: Final[list[str] | None] = (
+        allowed_openai_params: Final = (
             [*allowed_openai_param_names(kwargs.get("allowed_openai_params")), "reasoning_effort"]
             if bridges_to_responses_api
             or reasoning_effort_needs_allowing(

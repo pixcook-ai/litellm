@@ -55,22 +55,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git switch --create "$SYNC_BRANCH" refs/remotes/upstream/main
-          while IFS= read -r path; do
-            if git cat-file -e "refs/remotes/origin/${TARGET_BRANCH}:$path"; then
-              git checkout "refs/remotes/origin/${TARGET_BRANCH}" -- "$path"
-            else
-              git rm --ignore-unmatch -- "$path"
-            fi
-          done < <(git diff --name-only "refs/remotes/origin/${TARGET_BRANCH}" "refs/remotes/upstream/main" -- .github/workflows)
-          git add --all .github/workflows
-          if ! git diff --cached --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "chore(ci): preserve brand workflows"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin "$SYNC_BRANCH" >/dev/null; then
+            git fetch --no-tags origin "+refs/heads/${SYNC_BRANCH}:refs/remotes/origin/${SYNC_BRANCH}"
+            git switch --create "$SYNC_BRANCH" "refs/remotes/origin/${SYNC_BRANCH}"
+            git merge --no-edit "refs/remotes/origin/${TARGET_BRANCH}"
+          else
+            git switch --create "$SYNC_BRANCH" "refs/remotes/origin/${TARGET_BRANCH}"
           fi
+          git merge --no-edit refs/remotes/upstream/main
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git push --force origin "HEAD:refs/heads/${SYNC_BRANCH}"
+          git push origin "HEAD:refs/heads/${SYNC_BRANCH}"
 
       - name: Open or refresh the upstream sync pull request
         if: steps.changes.outputs.count != '0'
@@ -91,7 +87,7 @@ jobs:
               --base "$TARGET_BRANCH" \
               --head "$SYNC_BRANCH" \
               --title "chore: sync upstream LiteLLM" \
-              --body "This pull request tracks upstream LiteLLM changes for the brand branch. Review the upstream diff and resolve any conflicts before merging. The sync branch is refreshed daily and can also be updated with the workflow dispatch button."
+              --body "This pull request merges upstream LiteLLM into the brand branch. Review and test the integration before merging. The sync branch is updated daily and can also be updated with the workflow dispatch button."
           else
             echo "Updated existing pull request #$existing through the sync branch."
           fi

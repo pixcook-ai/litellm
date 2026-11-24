@@ -48,9 +48,7 @@ export function SidebarBrand({
   const reachableDarkLogo = logoUrlDark === erroredDarkLogo ? null : logoUrlDark;
   const darkLogoSrc =
     reachableDarkLogo ||
-    (usesBundledBrandLogo
-      ? bundledBrandLogo
-      : logoUrl || bundledLogoSrc(baseUrl, { dark: true, monogram: collapsed }));
+    (usesBundledBrandLogo ? bundledBrandLogo : logoUrl || bundledLogoSrc(baseUrl, { dark: true, monogram: collapsed }));
   return (
     <SidebarHeader className="h-14 flex-none border-b border-border p-3 group-data-[collapsible=icon]:h-auto group-data-[collapsible=icon]:py-2">
       <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1">

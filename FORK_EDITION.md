@@ -42,3 +42,7 @@ Python 策略位于 `litellm/proxy/auth/edition.py`，Rust 策略位于 `litellm
 当时 SSO、外部密钥服务等集成未对真实外部服务实测。Rust 网关只完成单元测试和编译，未作为独立服务实测。
 
 当时安装 ARM Python 3.12 后，以 `UV_PYTHON_PREFERENCE=only-managed` 运行 `make check` 通过。首次尝试选用了不兼容的 x86 解释器。未调整 lint 预算或类型上限，切换 Python 后另有 40 项许可和 KMS 测试通过。
+
+## 已应用迁移的兼容
+
+`20261123000000_supplier_portal` 已在品牌数据库应用，保留原 SQL 与校验和。该文件早于本分支接入上游锁超时检查，因此仅此迁移列入历史例外。后续迁移仍须以 `SET LOCAL lock_timeout` 开头，不得通过修改已应用 SQL 修复检查。供应商模型需同时维护主 schema 和两份副本，并接入上游数据库追踪表名注册与测试分片。

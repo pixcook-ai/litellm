@@ -1,0 +1,79 @@
+name: Sync upstream into brand branch
+
+on:
+  schedule:
+    - cron: "23 8 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: upstream-brand-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'pixcook-ai/litellm'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      TARGET_BRANCH: litellm_supplier_portal_20261123
+      SYNC_BRANCH: litellm_upstream_sync
+    steps:
+      - name: Require the default branch
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$REF" != "refs/heads/main" ]; then
+            echo "::error::Run this workflow from refs/heads/main, got $REF"
+            exit 1
+          fi
+
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fetch upstream and brand branch
+        run: |
+          git remote add upstream https://github.com/BerriAI/litellm.git
+          git fetch --no-tags upstream main:refs/remotes/upstream/main
+          git fetch --no-tags origin "+refs/heads/${TARGET_BRANCH}:refs/remotes/origin/${TARGET_BRANCH}"
+
+      - name: Check for upstream commits
+        id: changes
+        run: |
+          count=$(git rev-list --count "refs/remotes/origin/${TARGET_BRANCH}..refs/remotes/upstream/main")
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          echo "Upstream-only commits: $count"
+
+      - name: Update the sync branch
+        if: steps.changes.outputs.count != '0'
+        run: |
+          git push --force origin "refs/remotes/upstream/main:refs/heads/${SYNC_BRANCH}"
+
+      - name: Open or refresh the upstream sync pull request
+        if: steps.changes.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          existing=$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --state open \
+            --base "$TARGET_BRANCH" \
+            --head "$GITHUB_REPOSITORY_OWNER:$SYNC_BRANCH" \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [ -z "$existing" ]; then
+            gh pr create \
+              --repo "$GITHUB_REPOSITORY" \
+              --base "$TARGET_BRANCH" \
+              --head "$SYNC_BRANCH" \
+              --title "chore: sync upstream LiteLLM" \
+              --body "This pull request tracks upstream LiteLLM changes for the brand branch. Review the upstream diff and resolve any conflicts before merging. The sync branch is refreshed daily and can also be updated with the workflow dispatch button."
+          else
+            echo "Updated existing pull request #$existing through the sync branch."
+          fi

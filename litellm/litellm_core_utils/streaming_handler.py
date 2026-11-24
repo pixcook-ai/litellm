@@ -790,7 +790,7 @@ class CustomStreamWrapper:
                     )
         self._restore_consumer_correlation_context()
 
-    def check_send_stream_usage(self, stream_options: dict | None):
+    def check_send_stream_usage(self, stream_options: Mapping[str, object] | None):
         return stream_options is not None and stream_options.get("include_usage", False) is True
 
     def check_is_function_call(self, logging_obj) -> bool:
@@ -1038,7 +1038,7 @@ class CustomStreamWrapper:
         except Exception as e:
             raise e
 
-    def handle_azure_text_completion_chunk(self, chunk):
+    def handle_azure_text_completion_chunk(self, chunk: object):
         try:
             text = ""
             is_finished = False
@@ -1085,7 +1085,7 @@ class CustomStreamWrapper:
         except Exception as e:
             raise e
 
-    def handle_triton_stream(self, chunk):
+    def handle_triton_stream(self, chunk: object):
         try:
             if isinstance(chunk, dict):
                 parsed_response = chunk
@@ -1369,7 +1369,7 @@ class CustomStreamWrapper:
         """
         return delta is not None and stored_attribute(delta, attribute_name) is not None
 
-    def _copy_delta_attribute(self, source_delta, target_delta, attribute_name: str) -> None:
+    def _copy_delta_attribute(self, source_delta: object, target_delta: object, attribute_name: str) -> None:
         """
         Copy a specific attribute from source delta to target delta.
         """
@@ -1385,7 +1385,7 @@ class CustomStreamWrapper:
                 return True
         return False
 
-    def _handle_special_delta_attributes(self, delta, model_response: "ModelResponseStream") -> None:
+    def _handle_special_delta_attributes(self, delta: object, model_response: "ModelResponseStream") -> None:
         """
         Handle special delta attributes (audio, image) by copying them to model_response.
         """
@@ -1461,7 +1461,7 @@ class CustomStreamWrapper:
                                 - _closing_only_fields_to_hold_back(original_chunk, upstream_choice),
                             )
                         else:
-                            choices: Final = []
+                            choices: Final[list[StreamingChoices]] = []
                             for choice in upstream_chunk.choices:
                                 try:
                                     if isinstance(choice, BaseModel):
@@ -2114,7 +2114,7 @@ class CustomStreamWrapper:
             setattr(e, "message", str(e))
             raise self._map_stream_exception(e)
 
-    def set_logging_event_loop(self, loop):
+    def set_logging_event_loop(self, loop: asyncio.AbstractEventLoop):
         """
         import litellm, asyncio
 
@@ -2266,7 +2266,7 @@ class CustomStreamWrapper:
         if not cache_hit and self.logging_obj.llm_caching_handler is not None:
             await self.logging_obj.llm_caching_handler.add_streaming_response_to_cache(processed_chunk)
 
-    def run_success_logging_and_cache_storage(self, processed_chunk, cache_hit: bool):
+    def run_success_logging_and_cache_storage(self, processed_chunk: object, cache_hit: bool):
         """
         Runs success logging in a thread and adds the response to the cache
         """
@@ -3307,7 +3307,7 @@ def calculate_total_usage(chunks: Sequence[ModelResponse | ModelResponseStream])
     return returned_usage_chunk
 
 
-def generic_chunk_has_all_required_fields(chunk: dict) -> bool:
+def generic_chunk_has_all_required_fields(chunk: Mapping[str, object]) -> bool:
     """
     Checks if every key in the chunk dictionary is a GenericStreamingChunk field.
 

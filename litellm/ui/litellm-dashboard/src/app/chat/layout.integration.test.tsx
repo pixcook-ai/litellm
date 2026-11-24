@@ -1,9 +1,11 @@
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { renderWithProviders, screen, testQueryClient, within } from "@/../tests/test-utils";
+import { renderWithProviders, screen, testQueryClient, waitFor, within } from "@/../tests/test-utils";
 import { setServerRootPath } from "@/lib/serverRootPath";
 import { getProxyBaseUrl } from "@/components/networking";
 import ChatLayout from "./layout";
+import { uiHref } from "@/utils/uiHref";
+import { BRAND_LOGO_PATH, BRAND_NAME } from "@/lib/brand";
 
 const { router, route } = vi.hoisted(() => ({
   router: { push: vi.fn(), replace: vi.fn() },
@@ -88,9 +90,9 @@ describe("Chat layout product navigation", () => {
     ["public light and local dark", [LIGHT_LOGO, null], [false, true], [LIGHT_LOGO, "/get_image?theme=dark"]],
     ["local light and public dark", [null, DARK_LOGO], [true, false], ["/get_image", DARK_LOGO]],
     ["public light only", [LIGHT_LOGO, null], [false, false], [LIGHT_LOGO, LIGHT_LOGO]],
-    ["public dark only", [null, DARK_LOGO], [false, false], ["/get_image", DARK_LOGO]],
+    ["public dark only", [null, DARK_LOGO], [false, false], [BRAND_LOGO_PATH, DARK_LOGO]],
     ["local light only", [null, null], [true, false], ["/get_image", "/get_image"]],
-    ["local dark only", [null, null], [false, true], ["/get_image", "/get_image?theme=dark"]],
+    ["local dark only", [null, null], [false, true], [BRAND_LOGO_PATH, "/get_image?theme=dark"]],
   ] as const)(
     "should render %s organization logos from the theme response",
     async (
@@ -109,11 +111,12 @@ describe("Chat layout product navigation", () => {
 
       await user.click(screen.getByRole("button", { name: "Toggle Sidebar" }));
       const logo = await screen.findByRole("link", { name: "Chat home" });
-      const light = within(logo).getByAltText("LiteLLM");
+      const light = within(logo).getByAltText(BRAND_NAME);
       const dark = within(logo).getByAltText("");
-      const source = (path: string) => (path.startsWith("/") ? `${getProxyBaseUrl()}${path}` : path);
+      const source = (path: string) =>
+        path === BRAND_LOGO_PATH ? uiHref(path) : path.startsWith("/") ? `${getProxyBaseUrl()}${path}` : path;
       expect(light).toHaveAttribute("src", source(lightSource));
-      expect(dark).toHaveAttribute("src", source(darkSource));
+      await waitFor(() => expect(dark).toHaveAttribute("src", source(darkSource)));
       expect(light).toHaveClass("dark:hidden");
       expect(dark).toHaveClass("hidden", "dark:block");
     },
@@ -129,7 +132,7 @@ describe("Chat layout product navigation", () => {
 
     await user.click(screen.getByRole("button", { name: "Toggle Sidebar" }));
     expect(await screen.findByRole("dialog", { name: "Sidebar" })).toBeInTheDocument();
-    expect(screen.getByAltText("LiteLLM")).toHaveAttribute("src", `${getProxyBaseUrl()}/get_image`);
+    expect(screen.getByAltText(BRAND_NAME)).toHaveAttribute("src", uiHref(BRAND_LOGO_PATH));
   });
 
   it.each([

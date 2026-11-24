@@ -35,6 +35,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Fetch upstream and brand branch
         run: |
@@ -51,8 +52,23 @@ jobs:
 
       - name: Update the sync branch
         if: steps.changes.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git push --force origin "refs/remotes/upstream/main:refs/heads/${SYNC_BRANCH}"
+          git switch --create "$SYNC_BRANCH" refs/remotes/upstream/main
+          while IFS= read -r path; do
+            if git cat-file -e "refs/remotes/origin/${TARGET_BRANCH}:$path"; then
+              git checkout "refs/remotes/origin/${TARGET_BRANCH}" -- "$path"
+            else
+              git rm --ignore-unmatch -- "$path"
+            fi
+          done < <(git diff --name-only "refs/remotes/origin/${TARGET_BRANCH}" "refs/remotes/upstream/main" -- .github/workflows)
+          git add --all .github/workflows
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(ci): preserve brand workflows"
+          fi
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin "HEAD:refs/heads/${SYNC_BRANCH}"
 
       - name: Open or refresh the upstream sync pull request
         if: steps.changes.outputs.count != '0'

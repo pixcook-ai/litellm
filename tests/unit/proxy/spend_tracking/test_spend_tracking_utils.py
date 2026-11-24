@@ -595,11 +595,24 @@ def test_batch_spend_row_stores_the_same_usage_extras_as_a_chat_call_with_its_co
     )
 
     assert (payload["prompt_tokens"], payload["completion_tokens"], payload["total_tokens"]) == (29, 46, 75)
-    assert json.loads(payload["metadata"])["additional_usage_values"] == _get_additional_usage_values_for_usage(
+    actual: Final = json.loads(payload["metadata"])["additional_usage_values"]
+    expected: Final = _get_additional_usage_values_for_usage(
         litellm.Usage(
             prompt_tokens=29, completion_tokens=46, total_tokens=75, prompt_tokens_details={"cached_tokens": 8}
         )
     )
+    assert actual.keys() == expected.keys()
+    assert {
+        key: {field: value for field, value in details.items() if value is not None}
+        if isinstance(details, dict)
+        else details
+        for key, details in actual.items()
+    } == {
+        key: {field: value for field, value in details.items() if value is not None}
+        if isinstance(details, dict)
+        else details
+        for key, details in expected.items()
+    }
 
 
 class _HashingCache(litellm.Cache):

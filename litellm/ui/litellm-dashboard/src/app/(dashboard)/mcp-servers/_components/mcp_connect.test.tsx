@@ -1,3 +1,4 @@
+import { productNames } from "@/i18n/untranslated/productNames";
 import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -18,7 +19,7 @@ describe("MCPConnect routing", () => {
 
     expect(within(activePanel()).getByText(/"server_url": "https:\/\/backend\.example\.com\/mcp"/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: "LiteLLM Proxy" }));
+    await user.click(screen.getByRole("tab", { name: productNames.liteLLMProxy }));
 
     expect(within(activePanel()).getByText("https://backend.example.com/mcp")).toBeInTheDocument();
     expect(
@@ -31,14 +32,14 @@ describe("MCPConnect (tab mount contract)", () => {
   it("keeps the x-mcp-servers header toggle on after switching tabs away and back", async () => {
     render(<MCPConnect />);
 
-    await userEvent.click(screen.getByRole("tab", { name: "LiteLLM Proxy" }));
+    await userEvent.click(screen.getByRole("tab", { name: productNames.liteLLMProxy }));
     expect(within(activePanel()).queryByText(/"x-mcp-servers":/)).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("switch"));
     expect(within(activePanel()).getByText(/"x-mcp-servers": "Zapier_MCP,dev-group"/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("tab", { name: "Cursor" }));
-    await userEvent.click(screen.getByRole("tab", { name: "LiteLLM Proxy" }));
+    await userEvent.click(screen.getByRole("tab", { name: productNames.liteLLMProxy }));
 
     expect(screen.getByRole("switch")).toBeChecked();
     expect(within(activePanel()).getByText(/"x-mcp-servers": "Zapier_MCP,dev-group"/)).toBeInTheDocument();

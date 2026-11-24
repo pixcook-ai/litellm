@@ -5776,6 +5776,11 @@ def _complete_databricks_agent(ctx: CompletionDispatchContext) -> _CompletionDis
     )
 
 
+def _completion_prompt_template(model: str, values: Mapping[str, object]) -> dict[str, dict[str, object]]:
+    fields: Final = {key: value for key, value in values.items() if value}
+    return {model: fields} if fields else {}
+
+
 @tracer.wrap()
 @client
 def completion(
@@ -6247,20 +6252,16 @@ def completion(
             )  # support region-based pricing for bedrock
 
         logging.set_per_call_pricing(per_call_model_info(model, custom_llm_provider, kwargs, "chat"))
-        ### BUILD CUSTOM PROMPT TEMPLATE -- IF GIVEN ###
-        custom_prompt_dict = {}
-        if initial_prompt_value or roles or final_prompt_value or bos_token or eos_token:
-            custom_prompt_dict = {model: {}}
-            if initial_prompt_value:
-                custom_prompt_dict[model]["initial_prompt_value"] = initial_prompt_value
-            if roles:
-                custom_prompt_dict[model]["roles"] = roles
-            if final_prompt_value:
-                custom_prompt_dict[model]["final_prompt_value"] = final_prompt_value
-            if bos_token:
-                custom_prompt_dict[model]["bos_token"] = bos_token
-            if eos_token:
-                custom_prompt_dict[model]["eos_token"] = eos_token
+        custom_prompt_dict: Final = _completion_prompt_template(
+            model,
+            {
+                "initial_prompt_value": initial_prompt_value,
+                "roles": roles,
+                "final_prompt_value": final_prompt_value,
+                "bos_token": bos_token,
+                "eos_token": eos_token,
+            },
+        )
 
         messages = update_messages_with_model_file_ids(
             messages=messages,

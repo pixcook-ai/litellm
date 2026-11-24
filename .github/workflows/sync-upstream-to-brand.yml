@@ -19,7 +19,7 @@ jobs:
       contents: write
       pull-requests: write
     env:
-      TARGET_BRANCH: litellm_supplier_portal_20261123
+      TARGET_BRANCH: litellm_huiyizhuo
       SYNC_BRANCH: litellm_upstream_sync
     steps:
       - name: Require the default branch

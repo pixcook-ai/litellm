@@ -28,7 +28,7 @@ jobs:
       pull-requests: read
     outputs:
       artifact: ${{ steps.bridge.outputs.artifact }}
-    runs-on: ubuntu-latest-16-cores
+    runs-on: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
@@ -238,7 +238,7 @@ jobs:
             dist: loadscope
 
           - shard: llms-providers
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             test-path: |-
               tests/unit/llms/test_api_base_trailing_slash_routes.py
               tests/unit/llms/test_cache_control_and_reasoning.py
@@ -419,7 +419,7 @@ jobs:
             dist: loadscope
 
           - shard: root
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             test-path: >-
               tests/unit/test_*.py
             python-version: "3.12"
@@ -544,7 +544,7 @@ jobs:
             dist: loadscope
 
           - shard: proxy-endpoints
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             test-path: |-
               tests/unit/proxy/management_endpoints
               tests/unit/proxy/management_helpers
@@ -569,7 +569,7 @@ jobs:
             dist: loadscope
 
           - shard: proxy-feature-endpoints
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             test-path: |-
               tests/unit/proxy/guardrails
               --ignore=tests/unit/proxy/google_endpoints/test_gemini_agents_endpoints.py
@@ -1268,7 +1268,7 @@ jobs:
               --deselect=tests/unit/test_router/test_router.py::test_retry_records_never_carry_a_forwarded_credential
               --deselect=tests/unit/test_router/test_router.py::test_retry_records_are_flat_and_name_the_failed_group_on_fallback_hops
               --deselect=tests/unit/test_router/test_router.py::test_router_not_found_retries_governs_every_404_shape
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             python-version: "3.12"
             workers: 12
             reruns: 0
@@ -1288,7 +1288,7 @@ jobs:
               tests/unit/test_router/test_router.py::test_retry_records_never_carry_a_forwarded_credential
               tests/unit/test_router/test_router.py::test_retry_records_are_flat_and_name_the_failed_group_on_fallback_hops
               tests/unit/test_router/test_router.py::test_router_not_found_retries_governs_every_404_shape
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             python-version: "3.12"
             workers: 12
             reruns: 0
@@ -1299,7 +1299,7 @@ jobs:
           - shard: core-router-core
             test-path: |-
               tests/unit/test_router/core
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             python-version: "3.12"
             workers: 12
             reruns: 0
@@ -1432,7 +1432,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    runs-on: ubuntu-latest-16-cores
+    runs-on: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
     timeout-minutes: 20
     defaults:
       run:

@@ -18483,20 +18483,22 @@ async def test_enforce_model_rate_limits_returns_429_at_deployment_rpm():
         num_retries=0,
     )
 
-    with patch(
-        "litellm.router_utils.pre_call_checks.model_rate_limit_check.get_utc_datetime", return_value=frozen_minute
-    ):
-        first: Final = await router.acompletion(
+    from litellm.router_utils.pre_call_checks.model_rate_limit_check import ModelRateLimitingCheck
+
+    for callback in router.optional_callbacks or ():
+        if isinstance(callback, ModelRateLimitingCheck):
+            callback.clock = lambda: frozen_minute
+    first: Final = await router.acompletion(
+        model="fake-openai-endpoint",
+        messages=[{"role": "user", "content": "Hey, how's it going?"}],
+        mock_response="served",
+    )
+    with pytest.raises(litellm.RateLimitError) as rate_limited:
+        await router.acompletion(
             model="fake-openai-endpoint",
             messages=[{"role": "user", "content": "Hey, how's it going?"}],
             mock_response="served",
         )
-        with pytest.raises(litellm.RateLimitError) as rate_limited:
-            await router.acompletion(
-                model="fake-openai-endpoint",
-                messages=[{"role": "user", "content": "Hey, how's it going?"}],
-                mock_response="served",
-            )
 
     assert first.choices[0].message.content == "served"
     assert rate_limited.value.status_code == 429

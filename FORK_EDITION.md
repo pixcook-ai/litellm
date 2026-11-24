@@ -1,23 +1,44 @@
-# Branch edition
+# 汇一桌品牌版维护规则
 
-This branch enables enterprise features in every environment. Authentication, roles, organization isolation, budgets and request limits still apply. External integrations still need their own credentials and configuration.
+## 分支职责
 
-Python policy lives in `litellm/proxy/auth/edition.py`. Rust gateway policy lives in `litellm/rust/crates/gateway/src/edition.rs`. Keep these two constants aligned when merging upstream. The Python license, KMS and capacity constructors accept an edition argument so upstream license behavior remains testable. Rust uses `Entitlements::BranchEdition`, preserving signed and server verification.
+品牌产品主线为 `origin/litellm_huiyizhuo`，保存汇一桌品牌、中文翻译、主题、供应商功能和企业版策略。官方原版以 `upstream/main` 为准，只从官方获取更新。
 
-After an upstream update, inspect new license gates and run the license, priority reservation, KMS and organization tests. Verify the real login and organization creation flow. Existing sessions need a new login because the enterprise identity is carried in the login token.
+长期目标只维护官方原版和品牌版两条产品主线。当前 `origin/main` 仍承载定时同步工作流，属于过渡状态。在迁移工作流并验证定时和手动触发之前保留它。它不是纯上游镜像，不能当作官方原版。
 
-## Local verification on November 22, 2026
+## 上游同步流程
 
-The local proxy used two workers and dedicated Redis on port 6398 for both router and coordination state. Configuration was `/tmp/litellm-local-dev-20261122.yaml`, copied from the dev configuration with no provider models. Secrets came from the ignored `.env` and were not copied into evidence.
+1. 检查当前分支、工作树和未提交改动，获取最新远端状态，记录本次品牌基线和上游提交。保留用户及其他 Agent 的改动。
+2. 从最新品牌分支创建短期集成分支，再将选定的 `upstream/main` 提交合入。已有同一次同步 PR 时继续使用该 PR 分支，保留人工解决冲突的提交。
+3. 按功能逐项解决冲突，适配上游接口，同时保留品牌功能、中文翻译、标识资源和企业版策略。Python 与 Rust 的企业版策略必须一致。不得通过整文件覆盖或统一选择某一侧解决所有冲突。
+4. 在最终集成版本执行受影响测试和静态检查。涉及登录、组织、权限、预算或持久化时验证真实操作。品牌界面需要检查登录、组织创建、中文、主题、导航折叠图标和供应商页面。记录失败、跳过和外部配置尚未验证的范围。
+5. 将临时分支提交到以 `litellm_huiyizhuo` 为目标的同步 PR。使用保留上游祖先关系的合并方式，不压缩或变基上游同步历史。检查 CI 和评审结果，验收完成后合入品牌分支。
+6. 确认远端品牌分支包含集成提交后，删除本次临时分支并回收干净的临时工作树。含未提交改动或独有提交的分支先保存并核查，不直接删除。
+
+自动同步必须从品牌分支起步，合入上游。发生冲突时停止发布并报告冲突文件，不能发布未解决的合并结果。已有同步分支只做正常推进，不能定期强推覆盖人工修复。品牌主线不得强推。官方原版不得加入品牌改动。
+
+## 企业版策略
+
+本分支在所有环境启用企业版功能，认证、角色、组织隔离、预算和请求限制仍然生效。SSO、外部密钥服务等集成仍需各自的凭据和配置。
+
+Python 策略位于 `litellm/proxy/auth/edition.py`，Rust 策略位于 `litellm/rust/crates/gateway/src/edition.rs`。上游同步时保持两者一致，并检查新增许可门控。Python 的许可、KMS 和容量构造器通过版本参数保留上游策略的可测试性。Rust 使用 `Entitlements::BranchEdition`，保留签名和服务器验证逻辑。
+
+更新后运行许可、优先级预留、KMS、组织和登录相关检查。已有会话可能需要重新登录，因为企业版身份随登录令牌携带。
+
+## 历史验收记录
+
+以下为 2026 年 11 月 22 日的验收记录，不能替代后续同步的验收。
+
+本地代理使用两个 worker，路由与协调状态共用端口 6398 的专用 Redis。配置来自开发配置的副本 `/tmp/litellm-local-dev-20261122.yaml`，未配置供应商模型。凭据来自忽略的 `.env`，未写入证据。
 
 ```sh
 .venv/bin/python litellm/proxy/proxy_cli.py --config /tmp/litellm-local-dev-20261122.yaml --host 127.0.0.1 --port 4000 --num_workers 2 --detailed_debug --reload --use_v2_migration_resolver
 ```
 
-Before the change, an authenticated `GET /organization/list` returned 403 and `/organizations` showed the enterprise notice. After the change, the same API returned 200. Anonymous access returned 401. Through the browser at `http://127.0.0.1:3000/organizations`, a fresh admin login opened the organization table. Creating `Enterprise verification` succeeded and appeared in the table. The test organization was deleted afterward and the empty table was read back.
+改动前，已认证的 `GET /organization/list` 返回 403，组织页面显示企业版提示。改动后同一接口返回 200，匿名请求返回 401。在本地组织页面重新登录后，管理员可以打开组织表格并创建测试组织，随后删除并确认表格为空。
 
-Python license and limiter tests passed 153 cases. Organization, budget and login tests passed 202 cases. License, KMS and CI coverage checks passed 93 cases. Disabling the Python edition constant made both new license regression cases fail, and the constant was restored. Rust license tests passed 76 cases and `cargo check -p litellm-gateway --locked` passed.
+当时 Python 许可和限制器测试通过 153 项，组织、预算和登录测试通过 202 项，许可、KMS 和 CI 覆盖检查通过 93 项。关闭 Python 企业版常量后，两项新增回归测试失败，随后恢复。Rust 许可测试通过 76 项，`cargo check -p litellm-gateway --locked` 通过。
 
-SSO, external secret services and other enterprise integrations were not tested against real external services. Rust gateway behavior was unit tested and compiled, but was not exercised as a standalone live server.
+当时 SSO、外部密钥服务等集成未对真实外部服务实测。Rust 网关只完成单元测试和编译，未作为独立服务实测。
 
-`make check` passed with `UV_PYTHON_PREFERENCE=only-managed` after installing an ARM Python 3.12 interpreter. The initial attempt selected an incompatible x86 interpreter. No lint budgets or type ceilings were changed. License and KMS tests passed another 40 cases after the local runtime moved to Python 3.12.
+当时安装 ARM Python 3.12 后，以 `UV_PYTHON_PREFERENCE=only-managed` 运行 `make check` 通过。首次尝试选用了不兼容的 x86 解释器。未调整 lint 预算或类型上限，切换 Python 后另有 40 项许可和 KMS 测试通过。

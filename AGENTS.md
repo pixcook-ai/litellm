@@ -1,3 +1,7 @@
+## 汇一桌品牌维护入口
+
+执行上游同步、品牌功能修改、分支整理或同步工作流变更前，必须先阅读并遵守根目录 [FORK_EDITION.md](FORK_EDITION.md)。品牌主线为 `litellm_huiyizhuo`，官方原版以 `upstream/main` 为准。品牌文档使用简体中文。品牌维护与同步 PR 以品牌主线为目标，优先适用该文档中的分支规则。
+
 Do not write comments unless they are any of:
 - absolutely necessary to explain some very complex business logic (in which case, keep it concise and clear)
 - used as an input for tools to read and act on. For example:

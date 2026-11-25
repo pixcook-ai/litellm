@@ -65,7 +65,7 @@ def admin_mcp_proxy(monkeypatch: pytest.MonkeyPatch) -> FastAPI:
     monkeypatch.setenv("LITELLM_MASTER_KEY", "sk-" + "1234567890abcdef" * 4)
     for name in ("WORKER_CONFIG", "CONFIG_FILE_PATH", "DATABASE_URL", "LITELLM_LICENSE"):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setattr(proxy_server, "_license_check", LicenseCheck())
+    monkeypatch.setattr(proxy_server, "_license_check", LicenseCheck(enterprise_features=False))
     monkeypatch.setattr(proxy_server, "premium_user", True)
     monkeypatch.setattr(proxy_server, "prisma_client", None)
     monkeypatch.setattr(proxy_server, "general_settings", {"disable_model_info_refresh": True})

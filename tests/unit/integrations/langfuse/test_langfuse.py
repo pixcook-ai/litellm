@@ -39,6 +39,7 @@ _VOLATILE_ATTRIBUTES: Final = frozenset(
         "langfuse.observation.metadata.litellm_response_cost",
         "langfuse.observation.metadata.requester_metadata",
         "langfuse.observation.metadata.response_id",
+        "langfuse.observation.metadata.supplier_usage",
         "langfuse.observation.metadata.usage_object",
     }
 )

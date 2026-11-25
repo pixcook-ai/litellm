@@ -3,6 +3,7 @@ import { uiHref } from "@/utils/uiHref";
 const LEGACY_PAGE_ROUTES: ReadonlyMap<string, string> = new Map(
   Object.entries({
     home: "home",
+    suppliers: "suppliers",
     "api-keys": "api-keys",
     models: "models-and-endpoints",
     "llm-playground": "playground",

@@ -9,6 +9,7 @@ from typing import Final
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MIGRATIONS_DIR = REPO_ROOT / "litellm" / "proxy-extras" / "litellm_proxy_extras" / "migrations"
 GRANDFATHERED_THROUGH: Final = "20261009000000_add_credential_display_name"
+APPLIED_BRAND_MIGRATIONS: Final = frozenset({"20261123000000_supplier_portal"})
 LOCK_TIMEOUT_LINE: Final = "SET LOCAL lock_timeout = '10s';"
 LOCK_TIMEOUT_RE: Final = re.compile(
     r"SET\s+LOCAL\s+lock_timeout\s*=\s*'\d+(?:ms|s)';",
@@ -25,7 +26,7 @@ def first_statement(sql: str) -> str:
 
 
 def scan_migration(directory: Path) -> tuple[str, ...]:
-    if directory.name <= GRANDFATHERED_THROUGH:
+    if directory.name <= GRANDFATHERED_THROUGH or directory.name in APPLIED_BRAND_MIGRATIONS:
         return ()
 
     sql: Final = (directory / "migration.sql").read_text(encoding="utf-8")

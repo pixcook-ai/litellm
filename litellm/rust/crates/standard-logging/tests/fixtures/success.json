@@ -71,6 +71,7 @@
     "spend_logs_metadata": {
       "project": "alpha"
     },
+    "supplier_usage": null,
     "team_alias": null,
     "team_id": null,
     "usage_object": {

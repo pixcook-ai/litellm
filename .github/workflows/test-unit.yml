@@ -28,7 +28,7 @@ jobs:
       pull-requests: read
     outputs:
       artifact: ${{ steps.bridge.outputs.artifact }}
-    runs-on: ubuntu-latest-16-cores
+    runs-on: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
@@ -105,7 +105,7 @@ jobs:
           set -o pipefail
           mode=core
           lint_runtime=true
-          [ -n "${PR_NUMBER}" ] || { mode=full; lint_runtime=false; }
+          [ -n "${PR_NUMBER}" ] || mode=full
           case "${BASE_REF}" in
             rc/* | stable/* | lts/*) mode=full; lint_runtime=false ;;
           esac
@@ -238,7 +238,7 @@ jobs:
             dist: loadscope
 
           - shard: llms-providers
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             test-path: |-
               tests/unit/llms/test_api_base_trailing_slash_routes.py
               tests/unit/llms/test_cache_control_and_reasoning.py
@@ -304,7 +304,9 @@ jobs:
               tests/unit/llms/gigachat
               tests/unit/llms/google_pse
               tests/unit/llms/github_copilot
+              tests/unit/llms/gnani
               tests/unit/llms/gradient_ai
+              tests/unit/llms/gradium
               tests/unit/llms/groq
               tests/unit/llms/heroku
               tests/unit/llms/hosted_vllm
@@ -417,7 +419,7 @@ jobs:
             dist: loadscope
 
           - shard: root
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             test-path: >-
               tests/unit/test_*.py
             python-version: "3.12"
@@ -542,10 +544,11 @@ jobs:
             dist: loadscope
 
           - shard: proxy-endpoints
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             test-path: |-
               tests/unit/proxy/management_endpoints
               tests/unit/proxy/management_helpers
+              tests/unit/proxy/supplier_portal
               tests/unit/proxy/list_api
               tests/unit/proxy/analytics_endpoints
               tests/unit/proxy/alerting_endpoints
@@ -567,7 +570,7 @@ jobs:
             dist: loadscope
 
           - shard: proxy-feature-endpoints
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             test-path: |-
               tests/unit/proxy/guardrails
               --ignore=tests/unit/proxy/google_endpoints/test_gemini_agents_endpoints.py
@@ -1266,7 +1269,7 @@ jobs:
               --deselect=tests/unit/test_router/test_router.py::test_retry_records_never_carry_a_forwarded_credential
               --deselect=tests/unit/test_router/test_router.py::test_retry_records_are_flat_and_name_the_failed_group_on_fallback_hops
               --deselect=tests/unit/test_router/test_router.py::test_router_not_found_retries_governs_every_404_shape
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             python-version: "3.12"
             workers: 12
             reruns: 0
@@ -1286,7 +1289,7 @@ jobs:
               tests/unit/test_router/test_router.py::test_retry_records_never_carry_a_forwarded_credential
               tests/unit/test_router/test_router.py::test_retry_records_are_flat_and_name_the_failed_group_on_fallback_hops
               tests/unit/test_router/test_router.py::test_router_not_found_retries_governs_every_404_shape
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             python-version: "3.12"
             workers: 12
             reruns: 0
@@ -1297,7 +1300,7 @@ jobs:
           - shard: core-router-core
             test-path: |-
               tests/unit/test_router/core
-            runner: ubuntu-latest-16-cores
+            runner: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
             python-version: "3.12"
             workers: 12
             reruns: 0
@@ -1369,6 +1372,14 @@ jobs:
         timeout-minutes: 5
         uses: ./.github/actions/cache-uv-downloads
 
+      - name: Checkout litellm-docs into docs/my-website (for documentation_tests)
+        if: steps.changes.outputs.decision != 'skip'
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          repository: BerriAI/litellm-docs
+          path: docs/my-website
+          persist-credentials: false
+
       - name: Download the Rust bridge
         if: steps.changes.outputs.decision != 'skip'
         timeout-minutes: 5
@@ -1404,13 +1415,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: uv run --no-sync python litellm/scripts/openapi_docs_gate.py --base "$(git rev-parse HEAD^1)"
+
+      - name: Run the code-quality checks that import litellm
+        if: steps.changes.outputs.decision != 'skip'
+        run: |
+          printf '%s\n' "$GITHUB_WORKSPACE" > "$(.venv/bin/python -c 'import sysconfig; print(sysconfig.get_path("purelib"))')/litellm-workspace.pth"
+          uv run --no-sync python .github/scripts/ci/run_parallel_checks.py --jobs 4 <<'EOF'
+          python ./tests/code_coverage_tests/enforce_llms_folder_style.py
+          python ./tests/code_coverage_tests/test_proxy_types_import.py
+          pytest -q --noconftest -p no:cacheprovider -c /dev/null tests/code_coverage_tests/test_generate_provider_endpoints_support.py
+          LITELLM_MASTER_KEY="sk-$(openssl rand -hex 16)" PYTHONPATH=tests/e2e pytest -q --noconftest -p no:cacheprovider -c /dev/null tests/code_coverage_tests/test_e2e_metadata.py tests/code_coverage_tests/test_e2e_junit_report.py
+          python ./tests/documentation_tests/test_router_settings.py
+          python ./tests/documentation_tests/test_api_docs.py
+          EOF
   ui-unit:
     name: ui-unit
     permissions:
       contents: read
       pull-requests: read
-    runs-on: ubuntu-latest-16-cores
-    timeout-minutes: 20
+    runs-on: ${{ github.repository == 'BerriAI/litellm' && 'ubuntu-latest-16-cores' || 'ubuntu-latest' }}
+    timeout-minutes: ${{ github.repository == 'BerriAI/litellm' && 20 || 40 }}
     defaults:
       run:
         working-directory: litellm/ui/litellm-dashboard
@@ -1454,12 +1478,13 @@ jobs:
         if: steps.changes.outputs.decision != 'skip'
         env:
           CI: "true"
+          UI_TEST_WORKERS: ${{ github.repository == 'BerriAI/litellm' && 14 || 2 }}
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           EVENT_BASE_REF: ${{ github.event.pull_request.base.ref }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          full_suite() { npm run test -- --run --pool forks --maxWorkers=14; }
+          full_suite() { npm run test -- --run --pool forks --maxWorkers="$UI_TEST_WORKERS"; }
 
           if [ -z "$PR_NUMBER" ]; then
             echo "Push to $GITHUB_REF_NAME: running the full suite"
@@ -1489,7 +1514,7 @@ jobs:
 
           echo "Pull request: running tests related to ${#changed_files[@]} changed UI files"
           npm run test -- related "${changed_files[@]}" --run --passWithNoTests \
-            --pool forks --maxWorkers=14
+            --pool forks --maxWorkers="$UI_TEST_WORKERS"
   docs:
     name: docs
     needs: plan

@@ -27,4 +27,5 @@ pub struct Metadata {
     pub team_id: Option<String>,
     pub used_client_oauth_token: Option<bool>,
     pub claude_subscription_usage: Option<ClaudeSubscriptionUsage>,
+    pub supplier_usage: Option<Value>,
 }

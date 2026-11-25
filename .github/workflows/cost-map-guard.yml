@@ -69,6 +69,11 @@ jobs:
           else
             echo "cost_map=true" >> "$GITHUB_OUTPUT"
           fi
+      - name: Check out the registry parser matching the proposed cost map
+        if: steps.changed.outputs.cost_map == 'true'
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: git checkout -q --detach "$HEAD_SHA"
       - if: steps.changed.outputs.cost_map == 'true'
         run: rustup toolchain install --no-self-update
       - name: Load the cost map through model-catalog

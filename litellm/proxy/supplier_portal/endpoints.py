@@ -1,7 +1,8 @@
 from collections.abc import Awaitable, Callable
-from typing import Annotated, Final, NoReturn, TypeAlias, TypeVar, assert_never
+from typing import Annotated, Final, NoReturn, TypeAlias, TypeVar
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from typing_extensions import assert_never
 
 from litellm.exceptions import BadRequestError
 from litellm.litellm_core_utils.get_llm_provider_logic import get_llm_provider

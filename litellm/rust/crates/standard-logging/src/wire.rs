@@ -58,6 +58,7 @@ pub(crate) struct Metadata {
     pub(crate) team_id: Option<String>,
     pub(crate) used_client_oauth_token: Option<bool>,
     pub(crate) claude_subscription_usage: Option<ClaudeSubscriptionUsage>,
+    pub(crate) supplier_usage: Option<Value>,
 }
 
 #[derive(Serialize)]

@@ -62,6 +62,7 @@ fn metadata(
         team_id: metadata.team_id,
         used_client_oauth_token: metadata.used_client_oauth_token,
         claude_subscription_usage: metadata.claude_subscription_usage,
+        supplier_usage: metadata.supplier_usage,
     }
 }
 
@@ -400,6 +401,37 @@ mod tests {
 
         assert_eq!(document["metadata"]["claude_subscription_usage"], logged);
         assert_eq!(document["metadata"]["used_client_oauth_token"], json!(true));
+    }
+
+    #[test]
+    fn supplier_usage_is_preserved_in_logged_metadata() {
+        let served = success();
+        let payload = StandardLoggingPayload {
+            metadata: Metadata {
+                supplier_usage: Some(json!({
+                    "request_id": "snapshot-1",
+                    "model_id": "deployment-1",
+                    "started_at": "2026-01-01T12:00:00+00:00",
+                    "prompt_tokens": 10,
+                    "completion_tokens": 5,
+                    "cache_read_tokens": 2,
+                    "cache_write_tokens": 1
+                })),
+                ..served.metadata
+            },
+            ..served
+        };
+
+        let document = serde_json::to_value(payload).unwrap();
+
+        assert_eq!(
+            document["metadata"]["supplier_usage"]["request_id"],
+            json!("snapshot-1")
+        );
+        assert_eq!(
+            document["metadata"]["supplier_usage"]["cache_read_tokens"],
+            json!(2)
+        );
     }
 
     #[rstest]

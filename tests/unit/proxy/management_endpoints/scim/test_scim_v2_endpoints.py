@@ -4765,7 +4765,7 @@ async def test_group_push_creates_its_new_members_only_when_they_all_fit_the_lic
     up front, so a push cannot create users past it the way per-user checks racing each other could."""
     from litellm.proxy.auth.litellm_license import LicenseCheck
 
-    license_check: Final = LicenseCheck()
+    license_check: Final = LicenseCheck(enterprise_features=False)
     license_check.airgapped_license_data = {"max_users": 3}
     mocker.patch("litellm.proxy.proxy_server._license_check", license_check)
 
@@ -7402,7 +7402,7 @@ async def test_create_user_past_the_license_seat_cap_answers_a_scim_error_naming
     from litellm.proxy import proxy_server
     from litellm.proxy.auth.litellm_license import LicenseCheck
 
-    license_check: Final = LicenseCheck()
+    license_check: Final = LicenseCheck(enterprise_features=False)
     license_check.airgapped_license_data = {"max_users": 1}
     monkeypatch.setattr(proxy_server, "_license_check", license_check)
     users: Final = MagicMock()

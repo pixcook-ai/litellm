@@ -2861,6 +2861,7 @@ def _boot_proxy(
     server_accepted_license: str | None = None,
 ) -> None:
     from litellm.proxy import proxy_server
+    from litellm.proxy.auth.litellm_license import LicenseCheck
 
     def _license_server(request: httpx.Request) -> httpx.Response:
         license_server_urls.append(str(request.url))
@@ -2870,6 +2871,7 @@ def _boot_proxy(
 
     monkeypatch.setattr("litellm.proxy.proxy_server.prisma_client", None)
     monkeypatch.setattr("litellm.proxy.proxy_server.store_model_in_db", False)
+    monkeypatch.setattr(proxy_server, "_license_check", LicenseCheck(enterprise_features=False))
     monkeypatch.setattr("litellm.proxy.proxy_server._license_check.public_key", public_key)
     monkeypatch.setattr("litellm.proxy.proxy_server._license_check.airgapped_license_data", None)
     monkeypatch.setattr(

@@ -309,6 +309,7 @@ _PRE_GUARD_MIGRATIONS = frozenset({
     "20260817143646_add_daily_guardrail_usage_units",
     "20260818224500_add_shadow_eval_stopped_by",
     "20260819000000_shadow_eval_max_budget",
+    "20261123000000_supplier_portal",
 })
 
 

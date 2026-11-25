@@ -88,6 +88,8 @@ def _resolve(text: str, pull_request: Mapping[str, str] | None) -> str:
             return "BerriAI/litellm"
         if expression == "github.token":
             return "token"
+        if expression == "github.repository == 'BerriAI/litellm' && 14 || 2":
+            return "14"
         field: Final = expression.removeprefix("github.event.pull_request.")
         assert field != expression, f"the step uses ${{{{ {expression} }}}}, which this harness does not resolve"
         return "" if pull_request is None else pull_request[field]

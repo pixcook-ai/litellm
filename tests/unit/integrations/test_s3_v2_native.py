@@ -297,6 +297,7 @@ LIVE_BODY_FIELDS: Final = (
 LIVE_RESPONSE_FIELDS: Final = ("id", "created")
 LIVE_HEADERS: Final = ("content-md5", "x-amz-content-sha256", "content-disposition")
 LIVE_KEY: Final = re.compile(r"\d{4}-\d\d-\d\d/time-\d\d-\d\d-\d\d-\d{6}_[^/]+\.json$")
+LIVE_METADATA_FIELDS: Final = ("supplier_usage",)
 TRACEBACK_FRAME: Final = re.compile(r'^  File "(?P<path>[^"]+)", line \d+, in (?P<function>.+)$')
 ENVIRONMENT_ROOTS: Final = (
     (re.compile(r"^.*/litellm/"), "litellm/"),
@@ -332,7 +333,16 @@ def _with_portable_traceback(body: object) -> object:
 def _with_portable_put(put: object) -> object:
     if not isinstance(put, dict):
         return put
-    return {**put, "body_json": _with_portable_traceback(put.get("body_json"))}
+    body: Final = put.get("body_json")
+    if not isinstance(body, dict):
+        return put
+    metadata: Final = body.get("metadata")
+    portable_body: Final = (
+        {**body, "metadata": {**metadata, "supplier_usage": "<live>"}}
+        if isinstance(metadata, dict)
+        else body
+    )
+    return {**put, "body_json": _with_portable_traceback(portable_body)}
 
 
 def _live_record(request: Received) -> dict[str, object]:
@@ -346,6 +356,11 @@ def _live_record(request: Received) -> dict[str, object]:
         for name in LIVE_RESPONSE_FIELDS:
             if name in response:
                 response[name] = "<live>"
+    metadata: Final = body.get("metadata")
+    if isinstance(metadata, dict):
+        for name in LIVE_METADATA_FIELDS:
+            if name in metadata:
+                metadata[name] = "<live>"
     return {
         "path": LIVE_KEY.sub("<date>/time-<clock>_<id>.json", request.path),
         "headers": {name: "<live>" if name in LIVE_HEADERS else request.headers.get(name) for name in COMPARED_HEADERS},

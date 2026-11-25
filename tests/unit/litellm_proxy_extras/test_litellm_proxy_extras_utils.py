@@ -750,6 +750,10 @@ class TestPartitionedSpendLogsPushGuard:
         monkeypatch.setattr(
             ProxyExtrasDBManager, "spend_logs_is_partitioned", staticmethod(lambda: True)
         )
+        monkeypatch.setattr(ProxyExtrasDBManager, "raise_if_lens_rename_pending", staticmethod(lambda: None))
+        monkeypatch.setattr(
+            ProxyExtrasDBManager, "raise_if_customer_member_budget_rename_pending", staticmethod(lambda: None)
+        )
         self._forbid_subprocess(monkeypatch)
         with pytest.raises(RuntimeError) as err:
             ProxyExtrasDBManager._setup_database_v2(use_migrate=False)

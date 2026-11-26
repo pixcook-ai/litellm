@@ -52,6 +52,7 @@ grep -qx "IMAGE=$old_image" "$workspace/opt/preview/release.env"
 grep -q 'up -d --no-deps --wait --wait-timeout 300 app' "$workspace/commands.log"
 [[ $(find "$workspace/opt/preview/backups" -name '*.dump' | wc -l) -eq 1 ]]
 grep -qx PRESERVED_SECRET=kept "$workspace/opt/preview/.env"
+python3 -c 'import os,sys; assert os.stat(sys.argv[1]).st_mode & 0o004, "Non-root container cannot read its config"' "$workspace/opt/preview/config.yaml"
 rm "$workspace/fail"
 bash "$workspace/deploy" preview "$new_image" > /dev/null
 grep -qx "IMAGE=$new_image" "$workspace/opt/preview/release.env"

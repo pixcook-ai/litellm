@@ -24,6 +24,8 @@ GitHub 的 preview、production 环境各使用一对独立部署密钥。对应
 
 预览监听 127.0.0.1:18401，生产监听 127.0.0.1:18400。通过 Nginx 分别代理 preview.huiyizhuo.com 和 huiyizhuo.com，配置 HTTPS。数据库及 Redis 仅在各自 Compose 网络内监听。修改每套环境的 config.yaml 配置供应商路由，模型也可通过管理界面持久化。仓库模板只在 config.yaml 不存在时复制，保留运营配置。
 
+环境目录权限为 700，.env 权限为 600。绑定到非 root 应用容器的 config.yaml 权限为 644，确保 UID 65532 可以读取。供应商凭据应通过环境变量引用或数据库保存。
+
 ## 检查与回退
 
 部署使用宿主 flock 串行锁。替换应用前拉取镜像，并在环境的 backups 目录创建 PostgreSQL 自定义格式备份。停止的数据库会先启动并检查后再备份。已有应用仍可在数据库备份期间处理请求。

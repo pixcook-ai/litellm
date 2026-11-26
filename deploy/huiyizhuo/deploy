@@ -61,6 +61,7 @@ fi
 chmod 600 .env
 cp "$base/compose.yaml" compose.yaml
 if [[ ! -f config.yaml ]]; then cp "$base/config.yaml" config.yaml; fi
+chmod 644 config.yaml
 compose() {
   docker compose --project-name "huiyizhuo-$environment" --env-file .env --env-file release.env -f compose.yaml "$@"
 }

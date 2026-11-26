@@ -1,6 +1,6 @@
 # 汇一桌部署
 
-品牌分支为 litellm_huiyizhuo。部署配置集中在本目录，继续使用上游 runtime 镜像和迁移入口。GitHub Actions 构建一次，先部署预览，通过后将同一镜像摘要部署生产。
+品牌分支为 litellm_huiyizhuo。部署配置集中在本目录，沿用上游 Dockerfile 的 runtime 阶段和迁移入口，从品牌源码构建应用镜像。GitHub Actions 构建一次，先部署预览，通过后将同一镜像摘要部署生产。
 
 ## 首次安装
 
@@ -43,3 +43,11 @@ GitHub 的 preview、production 环境各使用一对独立部署密钥。对应
     bash deploy/huiyizhuo/test-deploy.sh
 
 实际部署后还需验证两个 HTTPS 域名、管理员登录、退出后重新登录、中文与品牌资源，以及运行镜像摘要。SSO 和其他外部集成各需真实配置与验收。
+
+## 自动发布入口
+
+推送到 litellm_huiyizhuo 会构建并发布品牌镜像，预览健康检查通过后自动部署相同摘要到生产。发布生产前再次确认品牌分支 HEAD，已有更新时等待后续提交完成。手动触发只部署预览。
+
+当前仓库默认分支仍为 main，其同名工作流用于注册 GitHub Actions 入口。保留此入口，迁移默认分支时同步核对手动触发和定时上游同步。品牌代码继续在 litellm_huiyizhuo 维护，上游来源遵循根目录 FORK_EDITION.md。
+
+GitHub 若显示 fork 工作流已停用，需要在仓库 Actions 页面确认恢复。仅修改 Actions permissions API 可能不会解除这一状态。恢复前确认继承工作流的触发范围。

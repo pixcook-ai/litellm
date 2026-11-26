@@ -1,0 +1,59 @@
+services:
+  app:
+    image: ${IMAGE:?missing release image}
+    restart: unless-stopped
+    command: ["proxy", "--config", "/app/config.yaml", "--host", "0.0.0.0", "--port", "4000", "--num_workers", "2"]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://llmproxy:${POSTGRES_PASSWORD}@db:5432/litellm
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      STORE_MODEL_IN_DB: "True"
+      LITELLM_MIGRATION_DIR: /tmp/litellm-migrations
+    ports:
+      - "127.0.0.1:${APP_PORT}:4000"
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import json,urllib.request; r=json.load(urllib.request.urlopen('http://localhost:4000/health/readiness', timeout=10)); assert r.get('status') == 'healthy' and r.get('db') == 'connected', r"]
+      interval: 10s
+      timeout: 15s
+      retries: 6
+      start_period: 120s
+  db:
+    image: ${POSTGRES_IMAGE:?missing pinned Postgres image}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: litellm
+      POSTGRES_USER: llmproxy
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "llmproxy", "-d", "litellm"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  redis:
+    image: ${REDIS_IMAGE:?missing pinned Redis image}
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+volumes:
+  postgres_data:
+  redis_data:

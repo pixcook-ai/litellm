@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ $# != 1 || ! $1 =~ ^(preview|production)$ ]]; then
+  echo 'Invalid SSH deployment scope' >&2
+  exit 64
+fi
+pattern="^deploy ($1) (ghcr[.]io/pixcook-ai/litellm-huiyizhuo@sha256:[a-f0-9]{64})( ([A-Za-z0-9][A-Za-z0-9-]{0,38}))?$"
+if [[ ! ${SSH_ORIGINAL_COMMAND:-} =~ $pattern ]]; then
+  echo 'SSH key only permits its assigned deployment command' >&2
+  exit 64
+fi
+if [[ -n ${BASH_REMATCH[4]} ]]; then
+  exec /opt/huiyizhuo/deploy "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[4]}"
+fi
+exec /opt/huiyizhuo/deploy "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"

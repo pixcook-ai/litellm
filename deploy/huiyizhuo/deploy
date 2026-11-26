@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 077
+
+if [[ $# -lt 2 || $# -gt 3 ]]; then
+  echo 'Usage: deploy <preview|production> <image@sha256:digest> [github_actor]' >&2
+  exit 64
+fi
+environment=$1
+image=$2
+case "$environment" in
+  preview) port=18401; domain=preview.huiyizhuo.com ;;
+  production) port=18400; domain=huiyizhuo.com ;;
+  *) echo 'Invalid environment' >&2; exit 64 ;;
+esac
+if [[ ! $image =~ ^ghcr[.]io/pixcook-ai/litellm-huiyizhuo@sha256:[a-f0-9]{64}$ ]]; then
+  echo 'Invalid image digest' >&2
+  exit 64
+fi
+if [[ $# == 3 && ! $3 =~ ^[A-Za-z0-9][A-Za-z0-9-]{0,38}$ ]]; then
+  echo 'Invalid GitHub actor' >&2
+  exit 64
+fi
+base=/opt/huiyizhuo
+mkdir -p "$base/$environment"
+exec 9>"$base/deploy.lock"
+flock -w 900 9
+registry_config=''
+cleanup() {
+  if [[ -n $registry_config ]]; then rm -rf -- "$registry_config"; fi
+}
+trap cleanup EXIT
+if [[ $# == 3 ]]; then
+  IFS= read -r registry_token || [[ -n $registry_token ]]
+  if [[ -z $registry_token ]] || IFS= read -r _; then
+    echo 'Expected one registry token on stdin' >&2
+    exit 64
+  fi
+  registry_config=$(mktemp -d /tmp/huiyizhuo-registry.XXXXXXXX)
+  export DOCKER_CONFIG=$registry_config
+  printf '%s' "$registry_token" | docker login ghcr.io --username "$3" --password-stdin
+  unset registry_token
+fi
+cd "$base/$environment"
+if [[ ! -f .env ]]; then
+  docker pull postgres:16
+  docker pull redis:7-alpine
+  postgres_image=$(docker image inspect postgres:16 --format '{{index .RepoDigests 0}}')
+  redis_image=$(docker image inspect redis:7-alpine --format '{{index .RepoDigests 0}}')
+  {
+    printf 'POSTGRES_IMAGE=%s\nREDIS_IMAGE=%s\n' "$postgres_image" "$redis_image"
+    printf 'APP_PORT=%s\nPROXY_BASE_URL=https://%s\n' "$port" "$domain"
+    printf 'POSTGRES_PASSWORD=%s\n' "$(openssl rand -hex 32)"
+    printf 'REDIS_PASSWORD=%s\n' "$(openssl rand -hex 32)"
+    printf 'LITELLM_MASTER_KEY=sk-%s\n' "$(openssl rand -hex 32)"
+    printf 'LITELLM_SALT_KEY=sk-%s\n' "$(openssl rand -hex 32)"
+    printf 'UI_USERNAME=admin\nUI_PASSWORD=%s\n' "$(openssl rand -hex 24)"
+  } > .env.new
+  mv .env.new .env
+fi
+chmod 600 .env
+cp "$base/compose.yaml" compose.yaml
+if [[ ! -f config.yaml ]]; then cp "$base/config.yaml" config.yaml; fi
+compose() {
+  docker compose --project-name "huiyizhuo-$environment" --env-file .env --env-file release.env -f compose.yaml "$@"
+}
+old_image=''
+if [[ -f release.env ]]; then
+  old_image=$(sed -n 's/^IMAGE=//p' release.env)
+  if [[ ! $old_image =~ ^ghcr[.]io/pixcook-ai/litellm-huiyizhuo@sha256:[a-f0-9]{64}$ ]]; then
+    echo 'Invalid previous release file' >&2
+    exit 65
+  fi
+fi
+docker pull "$image"
+if [[ -n $old_image ]]; then
+  compose up -d --wait --wait-timeout 120 db redis
+  mkdir -p backups
+  backup="backups/$(date -u +%Y%m%dT%H%M%SZ)-$$.dump"
+  compose exec -T db pg_dump -U llmproxy -d litellm -Fc > "$backup.tmp"
+  mv "$backup.tmp" "$backup"
+fi
+rollback() {
+  failure=$?
+  trap - ERR
+  if [[ -n $old_image ]]; then
+    printf 'IMAGE=%s\n' "$old_image" > release.env.rollback
+    mv release.env.rollback release.env
+    echo 'Deployment failed; restarting the previous image against the existing database.' >&2
+    compose up -d --no-deps --wait --wait-timeout 300 app || true
+    echo 'Database migrations and new data were retained. Inspect schema compatibility before retrying.' >&2
+  else
+    echo 'First deployment failed; inspect containers and database before retrying.' >&2
+  fi
+  exit "$failure"
+}
+trap rollback ERR
+printf 'IMAGE=%s\n' "$image" > release.env.new
+mv release.env.new release.env
+compose config --quiet
+compose up -d --wait --wait-timeout 600
+compose exec -T db psql -U llmproxy -d litellm -Atqc 'SELECT 1' | grep -qx 1
+curl --fail --silent --show-error --max-time 15 "http://127.0.0.1:$port/health/readiness" | python3 -c 'import json,sys; r=json.load(sys.stdin); assert r.get("status") == "healthy" and r.get("db") == "connected", r'
+printf '%s %s\n' "$(date -u +%FT%TZ)" "$image" >> releases.log
+trap - ERR
+printf 'Ready %s %s\n' "$environment" "$image"

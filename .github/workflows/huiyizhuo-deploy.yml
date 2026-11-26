@@ -1,0 +1,132 @@
+name: 汇一桌部署
+
+on:
+  push:
+    branches: [litellm_huiyizhuo]
+  workflow_dispatch:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: huiyizhuo-deploy
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/pixcook-ai/litellm-huiyizhuo
+
+jobs:
+  build:
+    if: github.repository == 'pixcook-ai/litellm' && github.ref == 'refs/heads/litellm_huiyizhuo'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.publish.outputs.image }}
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+      - name: 构建并发布品牌镜像
+        id: publish
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf "%s" "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker buildx create --driver docker-container --use
+          docker buildx build --platform linux/amd64 --target runtime \
+            --file litellm/deploy/docker/Dockerfile \
+            --label "org.opencontainers.image.source=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --tag "$IMAGE:$GITHUB_SHA" --metadata-file "$RUNNER_TEMP/image.json" --push .
+          digest=$(jq -er '."containerimage.digest" | select(test("^sha256:[a-f0-9]{64}$"))' "$RUNNER_TEMP/image.json")
+          printf "image=%s@%s\n" "$IMAGE" "$digest" >> "$GITHUB_OUTPUT"
+
+  deploy-preview:
+    needs: build
+    permissions:
+      packages: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: preview
+      url: https://preview.huiyizhuo.com
+    steps:
+      - name: 部署并检查服务
+        env:
+          DEPLOY_IMAGE: ${{ needs.build.outputs.image }}
+          SSH_HOST: ${{ vars.HUIYIZHUO_SSH_HOST }}
+          SSH_USER: ${{ vars.HUIYIZHUO_SSH_USER }}
+          SSH_PORT: ${{ vars.HUIYIZHUO_SSH_PORT }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SSH_KEY: ${{ secrets.HUIYIZHUO_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HUIYIZHUO_SSH_KNOWN_HOSTS }}
+        run: |
+          : "${SSH_HOST:?缺少 SSH 主机}" "${SSH_USER:?缺少 SSH 用户}" \
+            "${SSH_KEY:?缺少部署密钥}" "${SSH_KNOWN_HOSTS:?缺少服务器公钥}"
+          : "${GHCR_TOKEN:?缺少镜像读取令牌}"
+          [[ "$GITHUB_ACTOR" =~ ^[a-zA-Z0-9-]+$ ]]
+          [[ "$DEPLOY_IMAGE" =~ ^ghcr[.]io/pixcook-ai/litellm-huiyizhuo@sha256:[a-f0-9]{64}$ ]]
+          umask 077
+          ssh_dir=$(mktemp -d "$RUNNER_TEMP/huiyizhuo-ssh.XXXXXXXX")
+          trap 'rm -rf -- "$ssh_dir"' EXIT
+          printf '%s\n' "$SSH_KEY" > "$ssh_dir/key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+          printf '%s\n' "$GHCR_TOKEN" | ssh -T -i "$ssh_dir/key" -p "${SSH_PORT:-22}" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$ssh_dir/known_hosts" -o ConnectTimeout=15 \
+            -o ServerAliveInterval=15 -o ServerAliveCountMax=3 \
+            -- "$SSH_USER@$SSH_HOST" "deploy preview $DEPLOY_IMAGE $GITHUB_ACTOR"
+
+  deploy-production:
+    needs: [build, deploy-preview]
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://huiyizhuo.com
+    steps:
+      - name: 确认待发布提交仍是品牌分支最新提交
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          head_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/litellm_huiyizhuo" --jq .object.sha)
+          if [[ "$head_sha" != "$GITHUB_SHA" ]]; then
+            echo '品牌分支已有更新，等待新提交完成预览。'
+            exit 1
+          fi
+      - name: 部署并检查服务
+        env:
+          DEPLOY_IMAGE: ${{ needs.build.outputs.image }}
+          SSH_HOST: ${{ vars.HUIYIZHUO_SSH_HOST }}
+          SSH_USER: ${{ vars.HUIYIZHUO_SSH_USER }}
+          SSH_PORT: ${{ vars.HUIYIZHUO_SSH_PORT }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SSH_KEY: ${{ secrets.HUIYIZHUO_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HUIYIZHUO_SSH_KNOWN_HOSTS }}
+        run: |
+          : "${SSH_HOST:?缺少 SSH 主机}" "${SSH_USER:?缺少 SSH 用户}" \
+            "${SSH_KEY:?缺少部署密钥}" "${SSH_KNOWN_HOSTS:?缺少服务器公钥}"
+          : "${GHCR_TOKEN:?缺少镜像读取令牌}"
+          [[ "$GITHUB_ACTOR" =~ ^[a-zA-Z0-9-]+$ ]]
+          [[ "$DEPLOY_IMAGE" =~ ^ghcr[.]io/pixcook-ai/litellm-huiyizhuo@sha256:[a-f0-9]{64}$ ]]
+          umask 077
+          ssh_dir=$(mktemp -d "$RUNNER_TEMP/huiyizhuo-ssh.XXXXXXXX")
+          trap 'rm -rf -- "$ssh_dir"' EXIT
+          printf '%s\n' "$SSH_KEY" > "$ssh_dir/key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+          printf '%s\n' "$GHCR_TOKEN" | ssh -T -i "$ssh_dir/key" -p "${SSH_PORT:-22}" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$ssh_dir/known_hosts" -o ConnectTimeout=15 \
+            -o ServerAliveInterval=15 -o ServerAliveCountMax=3 \
+            -- "$SSH_USER@$SSH_HOST" "deploy production $DEPLOY_IMAGE $GITHUB_ACTOR"
+
